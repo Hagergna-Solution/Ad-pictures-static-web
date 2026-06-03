@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from "next/link";
 import { waLink } from "@/lib/whatsapp";
 
 export function Footer() {
@@ -44,7 +45,12 @@ export function Footer() {
           </div>
         </div>
         <div className="fbase">
-          <span className="m">© 2026 AD PICTURES · ALL RIGHTS RESERVED</span>
+          <span className="m">
+            © 2026 AD PICTURES · ALL RIGHTS RESERVED ·{" "}
+            <Link className="fl" href="/privacy">
+              Privacy Policy
+            </Link>
+          </span>
           <div className="soc">
             <a
               href="https://instagram.com/adpictures_ethio"
