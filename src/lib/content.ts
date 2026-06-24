@@ -24,23 +24,6 @@ export const RECENT_FILMS: Film[] = [
   { ...FILMS[1], title: "The Reception", category: "Event Film" },
 ];
 
-export interface Still {
-  id: string;
-  title: string;
-  label: string;
-  tone: Tone;
-  exif: string;
-}
-
-export const STILLS: Still[] = [
-  { id: "still-1", title: "The Vow", label: "Wedding", tone: "high", exif: "50MM · F/2.0" },
-  { id: "still-2", title: "Habesha", label: "Portrait", tone: "warm", exif: "85MM · F/1.8" },
-  { id: "still-3", title: "Mercato", label: "Commercial", tone: "cool", exif: "24MM · F/8" },
-  { id: "still-4", title: "First Look", label: "Wedding", tone: "low", exif: "35MM · F/1.4" },
-  { id: "still-5", title: "Studio No.7", label: "Portrait", tone: "red", exif: "85MM · F/2.0" },
-  { id: "still-6", title: "Founders", label: "Commercial", tone: "high", exif: "50MM · F/4" },
-];
-
 export interface Service {
   /** Backend `category` enum value — also the URL segment for the detail page. */
   slug: string;
@@ -116,6 +99,22 @@ export interface MediaItem {
 
 export function isFilm(item: MediaItem): boolean {
   return item.type === "video" || item.type === "reel";
+}
+
+/* ============================================================
+   Public portfolio item
+   Mirrors `GET /api/v1/public/portfolio` (active items only).
+   The API returns the image as a storage `key`; `api.ts`
+   resolves it to a viewable `url`.
+   ============================================================ */
+
+export interface PortfolioItem {
+  title: string;
+  description?: string;
+  /** Resolved image URL (storage key resolved against the media base). */
+  url?: string;
+  category?: string;
+  tags?: string[];
 }
 
 export interface Faq {

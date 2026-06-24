@@ -1,4 +1,5 @@
-import { FILMS, RECENT_FILMS, STILLS } from "@/lib/content";
+import { FILMS, RECENT_FILMS } from "@/lib/content";
+import { getPortfolio } from "@/lib/api";
 import { Grain } from "@/components/Grain";
 import { Loader } from "@/components/Loader";
 import { Nav } from "@/components/Nav";
@@ -6,7 +7,7 @@ import { Hero } from "@/components/Hero";
 import { Marquee } from "@/components/Marquee";
 import { Rail } from "@/components/Rail";
 import { VideoCard } from "@/components/VideoCard";
-import { StillCard } from "@/components/StillCard";
+import { PortfolioCard } from "@/components/PortfolioCard";
 import { Studio } from "@/components/Studio";
 import { Services } from "@/components/Services";
 import { Testimonials } from "@/components/Testimonials";
@@ -15,7 +16,9 @@ import { BookingCTA } from "@/components/BookingCTA";
 import { Footer } from "@/components/Footer";
 import { FloatingWhatsApp } from "@/components/FloatingWhatsApp";
 
-export default function Home() {
+export default async function Home() {
+  const portfolio = await getPortfolio();
+
   return (
     <>
       <Grain />
@@ -40,10 +43,10 @@ export default function Home() {
         alt
         eyebrow="The Contact Sheet"
         title="Stills."
-        sub="Drag your favourite AD Pictures photos onto any frame — they stay put."
+        sub="A selection of frames from recent weddings, events and portrait sessions."
       >
-        {STILLS.map((still, i) => (
-          <StillCard key={still.id} still={still} index={i} />
+        {portfolio.map((item, i) => (
+          <PortfolioCard key={`${item.title}-${i}`} item={item} index={i} />
         ))}
       </Rail>
 
