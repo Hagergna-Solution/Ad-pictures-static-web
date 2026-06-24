@@ -2,13 +2,14 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { SERVICES, getServiceBySlug } from "@/lib/content";
-import { getMediaByCategory } from "@/lib/api";
+import { getPortfolio } from "@/lib/api";
 import { absoluteUrl } from "@/lib/site";
 import { serviceSchema, breadcrumbSchema } from "@/lib/schema";
+import { waLink } from "@/lib/whatsapp";
 import { JsonLd } from "@/components/JsonLd";
 import { Grain } from "@/components/Grain";
 import { Nav } from "@/components/Nav";
-import { MediaGallery } from "@/components/MediaGallery";
+import { PortfolioCard } from "@/components/PortfolioCard";
 import { BookingCTA } from "@/components/BookingCTA";
 import { Footer } from "@/components/Footer";
 import { FloatingWhatsApp } from "@/components/FloatingWhatsApp";
@@ -51,7 +52,8 @@ export default async function ServiceDetailPage({
   const service = getServiceBySlug(category);
   if (!service) notFound();
 
-  const media = await getMediaByCategory(category);
+  // Pull the public portfolio gallery, filtered to this service's category.
+  const photos = await getPortfolio(category);
 
   return (
     <>
@@ -76,7 +78,25 @@ export default async function ServiceDetailPage({
         </header>
 
         <section className="wrap detail-body">
-          <MediaGallery items={media} />
+          {photos.length === 0 ? (
+            <div className="media-empty">
+              <p>New work for this category is on the way.</p>
+              <a
+                className="btn-ghost"
+                href={waLink()}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Ask us what we have
+              </a>
+            </div>
+          ) : (
+            <div className="media-grid">
+              {photos.map((item, i) => (
+                <PortfolioCard key={`${item.title}-${i}`} item={item} index={i} />
+              ))}
+            </div>
+          )}
         </section>
       </main>
       <BookingCTA />
