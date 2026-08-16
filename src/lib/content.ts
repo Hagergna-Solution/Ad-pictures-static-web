@@ -6,22 +6,31 @@ export interface Film {
   category: string;
   tone: Tone;
   exif: string;
+  /**
+   * Still frame ("front" cover) shown on the card/hero until the reel plays.
+   * Optional: dynamic reels from the backend may not always carry a cover.
+   */
+  poster?: string;
 }
 
-// The four real vertical reels (1080×1920).
+/** Tone cycle used to give dynamic reels a cinematic resting gradient. */
+export const REEL_TONES: Tone[] = ["warm", "red", "low", "cool", "high"];
+
+// The four real vertical reels (1080×1920). Each carries a still poster so the
+// card reads as a finished photograph before the video ever plays.
 export const FILMS: Film[] = [
-  { src: "/uploads/VID_20260531_075900_120.mp4", title: "The Vow", category: "Wedding Film", tone: "warm", exif: "4K · 24FPS · T2.1" },
-  { src: "/uploads/VID_20260531_080025_723.mp4", title: "Grand Entrance", category: "Event Film", tone: "red", exif: "4K · 24FPS · T2.8" },
-  { src: "/uploads/VID_20260531_080043_009.mp4", title: "Mels Night", category: "Wedding Film", tone: "low", exif: "4K · 24FPS · T2.1" },
-  { src: "/uploads/VID_20260531_080054_116.mp4", title: "First Dance", category: "Wedding Film", tone: "cool", exif: "4K · 24FPS · T2.4" },
+  { src: "/uploads/VID_20260531_075900_120.mp4", title: "The Vow", category: "Wedding Film", tone: "warm", exif: "4K · 24FPS · T2.1", poster: "/uploads/photo_26.jpg" },
+  { src: "/uploads/VID_20260531_080025_723.mp4", title: "Grand Entrance", category: "Event Film", tone: "red", exif: "4K · 24FPS · T2.8", poster: "/uploads/photo_28.jpg" },
+  { src: "/uploads/VID_20260531_080043_009.mp4", title: "Mels Night", category: "Wedding Film", tone: "low", exif: "4K · 24FPS · T2.1", poster: "/uploads/photo_63.jpg" },
+  { src: "/uploads/VID_20260531_080054_116.mp4", title: "First Dance", category: "Wedding Film", tone: "cool", exif: "4K · 24FPS · T2.4", poster: "/uploads/photo_29.jpg" },
 ];
 
-// Recent reels reuse the films with fresh framing.
+// Recent reels reuse the films with fresh framing and their own posters.
 export const RECENT_FILMS: Film[] = [
-  { ...FILMS[2], title: "The Send-Off", category: "Wedding Film" },
-  { ...FILMS[0], title: "Henna Night", category: "Event Film" },
-  { ...FILMS[3], title: "Golden Hour", category: "Wedding Film" },
-  { ...FILMS[1], title: "The Reception", category: "Event Film" },
+  { ...FILMS[2], title: "The Send-Off", category: "Wedding Film", poster: "/uploads/photo_62.jpg" },
+  { ...FILMS[0], title: "Henna Night", category: "Event Film", poster: "/uploads/photo_27.jpg" },
+  { ...FILMS[3], title: "Golden Hour", category: "Wedding Film", poster: "/uploads/photo_65.jpg" },
+  { ...FILMS[1], title: "The Reception", category: "Event Film", poster: "/uploads/photo_64.jpg" },
 ];
 
 export interface Service {
@@ -104,8 +113,8 @@ export function isFilm(item: MediaItem): boolean {
 /* ============================================================
    Public portfolio item
    Mirrors `GET /api/v1/public/portfolio` (active items only).
-   The API returns the image as a storage `key`; `api.ts`
-   resolves it to a viewable `url`.
+   The API returns a nested `image: {key,url}` cover; `api.ts`
+   resolves it to a single viewable `url`.
    ============================================================ */
 
 export interface PortfolioItem {
@@ -133,7 +142,7 @@ export const FAQS: Faq[] = [
   },
   {
     q: "How do I book AD Pictures for my wedding or event?",
-    a: "Message us on WhatsApp at +251 908 030 809 with your date and location. We reply with availability, packages and a quote — usually within the hour.",
+    a: "Message us on WhatsApp at +251 92 717 1730 with your date and location. We reply with availability, packages and a quote — usually within the hour.",
   },
   {
     q: "How far in advance should I book?",

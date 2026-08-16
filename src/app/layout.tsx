@@ -79,7 +79,19 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" className={`${jost.variable} ${archivo.variable} ${spaceMono.variable}`}>
+    <html
+      lang="en"
+      className={`${jost.variable} ${archivo.variable} ${spaceMono.variable}`}
+      suppressHydrationWarning
+    >
+      <head>
+        {/* Apply the saved theme before first paint to avoid a flash. */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var t=localStorage.getItem('ad-theme');if(t==='light'||t==='dark'){document.documentElement.setAttribute('data-theme',t);}}catch(e){}})();`,
+          }}
+        />
+      </head>
       <body>
         <JsonLd data={siteGraph()} />
         {children}

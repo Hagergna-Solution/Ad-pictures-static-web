@@ -1,4 +1,5 @@
-import type { MediaItem, MediaType, PortfolioItem } from "./content";
+import type { MediaItem, MediaType, PortfolioItem, Film } from "./content";
+import { FILMS, RECENT_FILMS, REEL_TONES } from "./content";
 
 /**
  * Content API client.
@@ -60,83 +61,193 @@ export async function getMediaByCategory(category: string): Promise<MediaItem[]>
   return normalize(items);
 }
 
-/* ---------- public portfolio ---------- */
+/* ============================================================
+   public portfolio — ONE endpoint for everything
+   ------------------------------------------------------------
+   GET /api/v1/public/portfolio
+     ?category=wedding   → filter by category   (server-side)
+     ?front=true         → only featured items  (server-side)
+   Response: { success, data: { portfolio: [ item, ... ] } }
+   Each item has a cover `image` plus a `media[]` array whose
+   entries are tagged `kind: "image" | "video" | "reel"`.
+   `getPortfolio` maps each item to its cover still; `getReels`
+   pulls the featured items and extracts their reel-kind media.
+   ============================================================ */
 
-/**
- * Raw portfolio photo as returned by `GET /api/v1/public/gallery`.
- * The backend stores the image as flat `image_key` / `image_url` fields.
- */
-interface PortfolioApiItem {
-  title: string;
-  description?: string;
-  image_key?: string;
-  image_url?: string;
-  category?: string;
-  tags?: string[];
+const PORTFOLIO_ENDPOINT = "/api/v1/public/portfolio";
+
+type MediaKind = "image" | "video" | "reel";
+
+interface PortfolioMedia {
+  kind: MediaKind;
+  key?: string;
+  url?: string;
 }
 
-/**
- * Public portfolio gallery (`GET /api/v1/public/gallery`).
- *
- * The backend returns ALL active photos (sorted by sort_order); it does not
- * filter by category server-side. Pass `category` to filter client-side to a
- * single service slug — used by the service detail pages.
- */
-export async function getPortfolio(category?: string): Promise<PortfolioItem[]> {
-  if (!BASE) {
-    const all = placeholderPortfolio();
-    return category
-      ? all.filter((p) => matchesCategory(p.category, category))
-      : all;
-  }
+/** Raw portfolio item from the public endpoint. */
+interface PortfolioApiItem {
+  title?: string;
+  description?: string;
+  /** Primary cover image (may be null). */
+  image?: { key?: string; url?: string } | null;
+  media?: PortfolioMedia[];
+  category?: string;
+  tags?: string[];
+  /** Featured / show-on-landing flag. */
+  front?: boolean;
+}
 
-  const url = `${BASE}/api/v1/public/gallery`;
+/** Single fetch of the public portfolio, with optional server-side filters. */
+async function fetchPortfolio(params?: {
+  category?: string;
+  front?: boolean;
+}): Promise<PortfolioApiItem[]> {
+  const url = new URL(`${BASE}${PORTFOLIO_ENDPOINT}`);
+  if (params?.category) url.searchParams.set("category", params.category);
+  if (params?.front) url.searchParams.set("front", "true");
+
   const res = await fetch(url, { next: { revalidate: 60 } });
   if (!res.ok) {
     throw new Error(`Failed to load portfolio (${res.status})`);
   }
 
   const data: unknown = await res.json();
-  // Tolerate the `{ ok, data: [...] }` envelope or a bare array.
-  const items = extractPortfolio(data);
-
-  return items
-    .filter((p) => !category || matchesCategory(p.category, category))
-    .map((p) => ({
-      title: p.title,
-      description: p.description,
-      url: resolveImageUrl({ key: p.image_key, url: p.image_url }),
-      category: p.category,
-      tags: p.tags,
-    }));
+  return extractPortfolio(data);
 }
 
+/** Unwrap `{ success, data: { portfolio } }`, `{ data }`, `{ portfolio }`, or a bare array. */
 function extractPortfolio(data: unknown): PortfolioApiItem[] {
   if (Array.isArray(data)) return data as PortfolioApiItem[];
   if (data && typeof data === "object") {
-    // `{ ok: true, data: [...] }` is the standard apiResponse envelope.
-    const root = data as { data?: unknown; portfolio?: unknown };
-    const list = root.data ?? root.portfolio;
+    const root = data as {
+      data?: { portfolio?: unknown } | unknown;
+      portfolio?: unknown;
+    };
+    const nested = (root.data as { portfolio?: unknown } | undefined)?.portfolio;
+    const list = nested ?? root.data ?? root.portfolio;
     if (Array.isArray(list)) return list as PortfolioApiItem[];
   }
   return [];
 }
 
+/** A portfolio item's representative still: its cover, else its first image. */
+function portfolioStill(p: PortfolioApiItem): string | undefined {
+  const cover = resolveImageUrl(p.image);
+  if (cover) return cover;
+  return resolveImageUrl(p.media?.find((m) => m.kind === "image"));
+}
+
+/* ---------- public portfolio (stills) ---------- */
+
+/**
+ * Portfolio stills. Each item becomes one card using its cover image; items
+ * with no usable image are dropped. Pass a `category` (service slug) to filter
+ * server-side — used by the service detail pages.
+ */
+export async function getPortfolio(category?: string): Promise<PortfolioItem[]> {
+  const fallback = () => {
+    const all = placeholderPortfolio();
+    return category
+      ? all.filter((p) => matchesCategory(p.category, category))
+      : all;
+  };
+
+  if (!BASE) return fallback();
+
+  let items: PortfolioApiItem[];
+  try {
+    items = await fetchPortfolio(category ? { category } : undefined);
+  } catch {
+    // Backend slow/unreachable (e.g. cold start) — keep the page renderable.
+    return fallback();
+  }
+
+  return items
+    .map((p) => ({
+      title: p.title ?? "",
+      description: p.description,
+      url: portfolioStill(p),
+      category: p.category,
+      tags: p.tags,
+    }))
+    .filter((p) => Boolean(p.url));
+}
+
+/* ---------- public reels (landing-page films) ---------- */
+
+/**
+ * Static reel covers from public/uploads (vertical photos that suit the 9:16
+ * reel cards). Used as the resting still when an item has no cover image.
+ */
+const REEL_COVERS: readonly string[] = [
+  "/uploads/photo_26.jpg",
+  "/uploads/photo_28.jpg",
+  "/uploads/photo_63.jpg",
+  "/uploads/photo_29.jpg",
+  "/uploads/photo_62.jpg",
+  "/uploads/photo_27.jpg",
+  "/uploads/photo_61.jpg",
+];
+
+/**
+ * Landing-page reels: the featured items (`?front=true`), expanded into one
+ * reel per `kind: "reel"` media entry. Each reel's cover is its item's cover
+ * image, falling back to a static upload. Falls back to the built-in reels
+ * until the backend is live so the landing page stays populated.
+ */
+export async function getReels(): Promise<Film[]> {
+  const fallback = () => [...FILMS, ...RECENT_FILMS];
+  if (!BASE) return fallback();
+
+  let items: PortfolioApiItem[];
+  try {
+    items = await fetchPortfolio({ front: true });
+  } catch {
+    // Backend slow/unreachable — show the built-in reels rather than nothing.
+    return fallback();
+  }
+
+  const reels: Film[] = [];
+  for (const item of items) {
+    const cover = resolveImageUrl(item.image);
+    for (const m of item.media ?? []) {
+      if (m.kind !== "reel") continue;
+      const src = resolveImageUrl(m);
+      if (!src) continue; // a reel with no playable video is unusable
+      const i = reels.length;
+      reels.push({
+        src,
+        poster: cover ?? REEL_COVERS[i % REEL_COVERS.length],
+        title: item.title ?? `Reel ${i + 1}`,
+        category: item.category ?? "Film",
+        tone: REEL_TONES[i % REEL_TONES.length],
+        exif: "4K · 24FPS",
+      });
+    }
+  }
+  return reels;
+}
+
 /* ---------- placeholder portfolio (used until the backend is live) ---------- */
 
-const PORTFOLIO_TEMPLATE: ReadonlyArray<{ title: string; category: string }> = [
-  { title: "The Vow", category: "Wedding" },
-  { title: "Habesha", category: "Portrait" },
-  { title: "Mercato", category: "Commercial" },
-  { title: "First Look", category: "Wedding" },
-  { title: "Studio No.7", category: "Portrait" },
-  { title: "Founders", category: "Commercial" },
+const PORTFOLIO_TEMPLATE: ReadonlyArray<{
+  title: string;
+  category: string;
+  url: string;
+}> = [
+  { title: "The Vow", category: "wedding", url: "/uploads/photo_26.jpg" },
+  { title: "Garden Frame", category: "wedding", url: "/uploads/photo_61.jpg" },
+  { title: "The Reception", category: "event", url: "/uploads/photo_64.jpg" },
+  { title: "First Look", category: "wedding", url: "/uploads/photo_28.jpg" },
+  { title: "The Party", category: "portrait", url: "/uploads/photo_62.jpg" },
+  { title: "Night Walk", category: "wedding", url: "/uploads/photo_65.jpg" },
 ];
 
 function placeholderPortfolio(): PortfolioItem[] {
   return PORTFOLIO_TEMPLATE.map((t) => ({
     title: t.title,
     category: t.category,
+    url: t.url,
   }));
 }
 

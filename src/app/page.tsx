@@ -1,5 +1,4 @@
-import { FILMS, RECENT_FILMS } from "@/lib/content";
-import { getPortfolio } from "@/lib/api";
+import { getPortfolio, getReels } from "@/lib/api";
 import { Grain } from "@/components/Grain";
 import { Loader } from "@/components/Loader";
 import { Nav } from "@/components/Nav";
@@ -17,26 +16,32 @@ import { Footer } from "@/components/Footer";
 import { FloatingWhatsApp } from "@/components/FloatingWhatsApp";
 
 export default async function Home() {
-  const portfolio = await getPortfolio();
+  const [portfolio, reels] = await Promise.all([getPortfolio(), getReels()]);
+
+  // Split the dynamic reels across the two rails; the hero rotates the first set.
+  const featured = reels.slice(0, 4);
+  const recent = reels.length > 4 ? reels.slice(4) : reels;
 
   return (
     <>
       <Grain />
       <Loader />
       <Nav />
-      <Hero />
+      <Hero films={featured} />
       <Marquee />
 
-      <Rail
-        id="films"
-        eyebrow="Featured Films"
-        title="Recent reels."
-        sub="Vertical, cinematic, made for the way people actually watch. Hover or tap a reel to play."
-      >
-        {FILMS.map((film, i) => (
-          <VideoCard key={film.title} film={film} index={i} />
-        ))}
-      </Rail>
+      {featured.length > 0 && (
+        <Rail
+          id="films"
+          eyebrow="Featured Films"
+          title="Recent reels."
+          sub="Vertical, cinematic, made for the way people actually watch. Hover or tap a reel to play."
+        >
+          {featured.map((film, i) => (
+            <VideoCard key={`${film.title}-${i}`} film={film} index={i} />
+          ))}
+        </Rail>
+      )}
 
       <Rail
         id="work"
@@ -52,15 +57,17 @@ export default async function Home() {
 
       <Studio />
 
-      <Rail
-        eyebrow="From the Edit Bay"
-        title="More moments."
-        sub="A rolling reel of weddings, send-offs and events — fresh from the timeline."
-      >
-        {RECENT_FILMS.map((film, i) => (
-          <VideoCard key={`${film.title}-${i}`} film={film} index={i} />
-        ))}
-      </Rail>
+      {recent.length > 0 && (
+        <Rail
+          eyebrow="From the Edit Bay"
+          title="More moments."
+          sub="A rolling reel of weddings, send-offs and events — fresh from the timeline."
+        >
+          {recent.map((film, i) => (
+            <VideoCard key={`recent-${film.title}-${i}`} film={film} index={i} />
+          ))}
+        </Rail>
+      )}
 
       <Services />
       <Testimonials />

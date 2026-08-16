@@ -125,7 +125,7 @@
    ============================================================ */
 *{box-sizing:border-box;margin:0;padding:0}
 html{scroll-behavior:smooth}
-body{background:var(--ink-900);color:#fff;font-family:var(--font-ui);overflow-x:hidden;-webkit-font-smoothing:antialiased}
+body{background:var(--bg);color:var(--fg1);font-family:var(--font-ui);overflow-x:hidden;-webkit-font-smoothing:antialiased;transition:background .4s var(--ease-out),color .4s var(--ease-out)}
 img,video{display:block}
 a{text-decoration:none;color:inherit}
 button{font-family:inherit}
@@ -149,6 +149,7 @@ nav{position:fixed;top:0;left:0;right:0;z-index:200;display:flex;align-items:cen
   padding:20px clamp(18px,4vw,56px);transition:background .35s var(--ease-out),padding .35s var(--ease-out),border-color .35s}
 nav.scrolled{background:rgba(8,8,8,.72);backdrop-filter:blur(18px);border-bottom:1px solid var(--border);padding-top:13px;padding-bottom:13px}
 nav .brand img{height:38px;width:auto}
+nav .brand .logo-on-light{display:none}
 nav .links{display:flex;align-items:center;gap:clamp(12px,2vw,32px)}
 nav .links a.lnk{font-family:var(--font-brand);font-weight:500;text-transform:uppercase;letter-spacing:.16em;font-size:12px;color:var(--fg2);transition:color .2s}
 nav .links a.lnk:hover{color:#fff}
@@ -156,6 +157,10 @@ nav .links a.lnk:hover{color:#fff}
 .book-btn:hover{background:var(--ad-red-deep);transform:translateY(-1px)}
 .book-btn:active{transform:scale(.98)}
 .book-btn .wa{width:15px;height:15px;fill:currentColor}
+.theme-toggle{flex:0 0 auto;width:40px;height:40px;display:grid;place-items:center;border:1px solid var(--border-strong);background:transparent;color:var(--fg2);cursor:pointer;transition:color .2s,border-color .2s,background .2s,transform .15s}
+.theme-toggle:hover{color:var(--fg1);border-color:var(--fg1)}
+.theme-toggle:active{transform:scale(.94)}
+.theme-toggle svg{width:18px;height:18px}
 @media(max-width:780px){nav .links a.lnk{display:none}}
 
 /* ============================================================
@@ -163,7 +168,8 @@ nav .links a.lnk:hover{color:#fff}
    ============================================================ */
 .hero{position:relative;min-height:100svh;overflow:hidden;display:flex;flex-direction:column;justify-content:flex-end;background:#000;padding:124px 0 30px}
 .herobg{position:absolute;inset:0;z-index:0;overflow:hidden}
-.herobg video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;z-index:1}
+.herobg .herobg-poster{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:1}
+.herobg video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;z-index:2}
 .herobg video.show{opacity:1}
 .herobg .rtone{position:absolute;inset:0;z-index:0}
 .herobg .rtone .wm{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;opacity:.06}
@@ -264,8 +270,12 @@ section{position:relative}
 /* portrait reel card */
 .vcard{position:relative;flex:0 0 auto;width:clamp(220px,24vw,278px);aspect-ratio:9/16;overflow:hidden;background:#101010;border:1px solid var(--border);cursor:pointer;scroll-snap-align:start;transition:transform .35s var(--ease-out),border-color .25s}
 .vcard:hover{transform:translateY(-5px);border-color:var(--border-strong)}
-.vcard video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity .5s}
+.vcard video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;z-index:2;transition:opacity .5s}
 .vcard.playing video{opacity:1}
+/* resting still — a finished photograph before the reel plays */
+.vcard .poster{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:1;transition:opacity .6s var(--ease-out),transform .6s var(--ease-out)}
+.vcard:hover .poster{transform:scale(1.04)}
+.vcard.playing .poster{opacity:0}
 .vcard .tone,.pcard .tone{position:absolute;inset:0}
 .tone .gr{position:absolute;inset:0;opacity:.16;mix-blend-mode:overlay;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
 .tone .wm{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;opacity:.07}
@@ -305,9 +315,10 @@ section{position:relative}
 .manifesto h2 .red{color:var(--accent)}
 .manifesto p{color:var(--fg2);line-height:1.75;font-size:clamp(15px,1.4vw,18px);max-width:520px}
 .manifesto .portrait{position:relative;aspect-ratio:4/5;border:1px solid var(--border);overflow:hidden}
-.manifesto .portrait video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity .6s ease;z-index:1}
+.manifesto .portrait .poster{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:1}
+.manifesto .portrait video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity .6s ease;z-index:2}
 .manifesto .portrait video.show{opacity:1}
-.manifesto .portrait .rscrim{position:absolute;inset:0;background:linear-gradient(0deg,rgba(0,0,0,.4),transparent 40%)}
+.manifesto .portrait .rscrim{position:absolute;inset:0;z-index:3;background:linear-gradient(0deg,rgba(0,0,0,.4),transparent 40%)}
 .stat-row{display:flex;gap:clamp(24px,4vw,44px);margin-top:38px;flex-wrap:wrap}
 .stat .n{font-family:var(--font-brand);font-weight:600;font-size:clamp(28px,3.4vw,46px);color:#fff;letter-spacing:-.01em}
 .stat .l{font-family:var(--font-mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--fg3);margin-top:4px}
@@ -449,3 +460,57 @@ footer img.flogo{height:54px;width:auto;margin-bottom:16px}
 /* empty state */
 .media-empty{display:flex;flex-direction:column;align-items:flex-start;gap:20px;border-top:1px solid var(--border);padding:48px 0 64px}
 .media-empty p{font-family:var(--font-brand);font-weight:500;font-size:clamp(20px,3vw,30px);color:var(--fg2)}
+
+/* ============================================================
+   LIGHT THEME — surface overrides
+   The token block near the top flips the semantic variables; these
+   rules re-map the hand-tuned dark literals (#0b0b0b, #fff, white
+   rgba) to a warm editorial light palette. The HERO and FOOTER stay
+   cinematic dark on purpose — a dark top/bottom framing a light body.
+   ============================================================ */
+
+/* nav: frosted-paper bar once scrolled; light marks while floating
+   over the still-dark hero at the top of the page */
+[data-theme="light"] nav.scrolled{background:rgba(247,246,244,.82);border-bottom-color:var(--border)}
+[data-theme="light"] nav .links a.lnk:hover{color:var(--fg1)}
+[data-theme="light"] nav:not(.scrolled) .links a.lnk{color:rgba(255,255,255,.8)}
+[data-theme="light"] nav:not(.scrolled) .links a.lnk:hover{color:#fff}
+[data-theme="light"] nav:not(.scrolled) .theme-toggle{color:rgba(255,255,255,.82);border-color:rgba(255,255,255,.3)}
+[data-theme="light"] nav:not(.scrolled) .theme-toggle:hover{color:#fff;border-color:#fff}
+/* dark logo only on the light scrolled bar; white logo while over the hero */
+[data-theme="light"] nav.scrolled .brand .logo-on-dark{display:none}
+[data-theme="light"] nav.scrolled .brand .logo-on-light{display:block}
+
+/* marquee — ink outline on white */
+[data-theme="light"] .marquee{background:#fff}
+[data-theme="light"] .marquee span{-webkit-text-stroke-color:rgba(0,0,0,.26)}
+[data-theme="light"] .marquee span.fill{color:var(--fg1)}
+
+/* rails — alternate paper / white, ink controls */
+[data-theme="light"] .rail-sec.alt{background:#fff}
+[data-theme="light"] .rail-nav button{color:var(--fg1)}
+[data-theme="light"] .rail-nav button:hover{color:#fff}
+
+/* card shells: light with a soft lift (the photo/video covers the fill) */
+[data-theme="light"] .vcard,
+[data-theme="light"] .pcard,
+[data-theme="light"] .mcard{background:var(--fog-100);box-shadow:var(--shadow-2)}
+
+/* studio + stats */
+[data-theme="light"] .stat .n{color:var(--fg1)}
+
+/* services */
+[data-theme="light"] .svc .nm{color:var(--fg1)}
+
+/* testimonials */
+[data-theme="light"] .testi{background:#fff}
+[data-theme="light"] .tcard{background:var(--paper);box-shadow:var(--shadow-2)}
+[data-theme="light"] .tcard .q{color:var(--fg1)}
+[data-theme="light"] .tcard .who .nm{color:var(--fg1)}
+[data-theme="light"] .tcard .av{background:var(--fog-100)}
+
+/* faq */
+[data-theme="light"] .faq-item summary .q{color:var(--fg1)}
+
+/* booking cta — soft paper panel */
+[data-theme="light"] .cta{background:var(--paper-2)}

@@ -39,6 +39,15 @@ export function VideoCard({ film, index }: { film: Film; index: number }) {
           <Image src="/assets/logo-mark.png" alt="" width={545} height={500} aria-hidden="true" />
         </div>
       </div>
+      {film.poster && (
+        <Image
+          className="poster"
+          src={film.poster}
+          alt={film.title}
+          fill
+          sizes="(max-width:680px) 60vw, 278px"
+        />
+      )}
       <video ref={videoRef} muted loop playsInline preload="none" />
       <div className="ov">
         <div className="top">

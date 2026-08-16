@@ -28,8 +28,8 @@ export const site = {
   inLanguage: ["en", "am"],
   email: "hello@adpictures.et",
   /** E.164 for schema; display strings live in the footer. */
-  phones: ["+251908030809", "+251988130030"],
-  whatsapp: "251908030809",
+  phones: ["+251988130030"],
+  whatsapp: "+251988130030",
   address: {
     street: "Awlo Business Center, 3rd Floor, Bole Medhanialem",
     locality: "Addis Ababa",

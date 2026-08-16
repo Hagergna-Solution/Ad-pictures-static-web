@@ -157,7 +157,7 @@ export default function PrivacyPage() {
             <a className="fl" href={`mailto:${site.email}`}>
               {site.email}
             </a>{" "}
-            or on WhatsApp at +251 908 030 809. Studio: {site.address.street},{" "}
+            or on WhatsApp at +251 92 717 1730. Studio: {site.address.street},{" "}
             {site.address.locality}, Ethiopia.
           </p>
         </section>

@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import { waLink } from "@/lib/whatsapp";
 import { WhatsAppIcon } from "./icons";
+import { ThemeToggle } from "./ThemeToggle";
 
 const LINKS = [
   { href: "/#films", label: "Films" },
@@ -25,7 +26,21 @@ export function Nav() {
   return (
     <nav id="nav" className={scrolled ? "scrolled" : undefined}>
       <a className="brand" href="/">
-        <Image src="/assets/logo-lockup.png" alt="AD Pictures" width={1090} height={590} priority />
+        <Image
+          className="logo-on-dark"
+          src="/assets/logo-lockup.png"
+          alt="AD Pictures"
+          width={1090}
+          height={590}
+          priority
+        />
+        <Image
+          className="logo-on-light"
+          src="/assets/logo-lockup-dark.png"
+          alt="AD Pictures"
+          width={1090}
+          height={590}
+        />
       </a>
       <div className="links">
         {LINKS.map((l) => (
@@ -33,6 +48,7 @@ export function Nav() {
             {l.label}
           </a>
         ))}
+        <ThemeToggle />
         <a
           className="book-btn"
           href={waLink()}
