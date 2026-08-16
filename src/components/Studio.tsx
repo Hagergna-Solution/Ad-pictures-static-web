@@ -40,6 +40,13 @@ export function Studio() {
                 <Image src="/assets/logo-mark.png" alt="" width={545} height={500} aria-hidden="true" />
               </span>
             </div>
+            <Image
+              className="poster"
+              src="/uploads/photo_61.jpg"
+              alt="A wedding portrait by AD Pictures"
+              fill
+              sizes="(max-width:860px) 100vw, 50vw"
+            />
             <StudioVideo src={FILMS[3].src} />
             <div className="rscrim" />
           </div>

@@ -2,13 +2,15 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import Image from "next/image";
-import { FILMS } from "@/lib/content";
+import { FILMS as staticFilms, type Film } from "@/lib/content";
 import { waLink } from "@/lib/whatsapp";
 import { MutedIcon, PlayIcon, SoundIcon, WhatsAppIcon } from "./icons";
 
 const ROTATE_MS = 9000;
 
-export function Hero() {
+export function Hero({ films: propFilms }: { films?: Film[] }) {
+  // Drive the hero from dynamic reels when provided; otherwise the static set.
+  const FILMS = propFilms?.length ? propFilms : staticFilms;
   const [idx, setIdx] = useState(0); // the reel we WANT on screen
   const [active, setActive] = useState(0); // layer currently shown: 0 = A, 1 = B
   const [wantSound, setWantSound] = useState(false);
@@ -93,6 +95,17 @@ export function Hero() {
             <Image src="/assets/logo-mark.png" alt="" width={545} height={500} aria-hidden="true" />
           </span>
         </div>
+        {film.poster && (
+          <Image
+            className="herobg-poster"
+            src={film.poster}
+            alt=""
+            aria-hidden="true"
+            fill
+            priority
+            sizes="100vw"
+          />
+        )}
         <video
           ref={aRef}
           className={ready && active === 0 ? "show" : undefined}
