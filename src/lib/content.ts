@@ -142,7 +142,7 @@ export const FAQS: Faq[] = [
   },
   {
     q: "How do I book AD Pictures for my wedding or event?",
-    a: "Message us on WhatsApp at +251 92 717 1730 with your date and location. We reply with availability, packages and a quote — usually within the hour.",
+    a: "Message us on WhatsApp at +251988130030 with your date and location. We reply with availability, packages and a quote — usually within the hour.",
   },
   {
     q: "How far in advance should I book?",
