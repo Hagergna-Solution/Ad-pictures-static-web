@@ -8,6 +8,17 @@ import { MutedIcon, PlayIcon, SoundIcon, WhatsAppIcon } from "./icons";
 
 const ROTATE_MS = 9000;
 
+/**
+ * Enter a reel at its chosen in-point, so the hero opens on the shot the film
+ * is actually about. Guarded: a clip shorter than its in-point just plays from
+ * the top rather than seeking past its own end.
+ */
+function seekToStart(video: HTMLVideoElement, start?: number) {
+  if (!start) return;
+  const d = video.duration;
+  if (Number.isFinite(d) && start < d - 1) video.currentTime = start;
+}
+
 export function Hero({ films: propFilms }: { films?: Film[] }) {
   // Drive the hero from dynamic reels when provided; otherwise the static set.
   const FILMS = propFilms?.length ? propFilms : staticFilms;
@@ -23,14 +34,17 @@ export function Hero({ films: propFilms }: { films?: Film[] }) {
 
   const film = FILMS[idx];
 
-  // Load the first reel into layer A on mount.
+  // Load the first reel into layer A on mount, entering at its chosen in-point.
   useEffect(() => {
     const v = aRef.current;
     if (!v) return;
     v.muted = true;
     v.src = FILMS[0].src;
-    v.play().catch(() => {});
-    const onReady = () => setReady(true);
+    const onReady = () => {
+      seekToStart(v, FILMS[0].start);
+      v.play().catch(() => {});
+      setReady(true);
+    };
     v.addEventListener("loadeddata", onReady, { once: true });
     return () => v.removeEventListener("loadeddata", onReady);
   }, []);
@@ -54,6 +68,7 @@ export function Hero({ films: propFilms }: { films?: Film[] }) {
     const reveal = () => {
       if (cancelled) return;
       layerFilm.current[inactive] = idx;
+      seekToStart(incoming, FILMS[idx].start);
       incoming.play().catch(() => {});
       setActive(inactive);
       outgoing?.pause();
@@ -87,6 +102,14 @@ export function Hero({ films: propFilms }: { films?: Film[] }) {
     }
   }, [active]);
 
+  // Each layer keeps the focal point of the reel it currently holds, so the
+  // crop follows the footage through a dissolve instead of snapping.
+  const focusOf = (layer: 0 | 1) => {
+    const i = layerFilm.current[layer];
+    const f = i >= 0 && i < FILMS.length ? FILMS[i] : undefined;
+    return f?.focus ? { objectPosition: f.focus } : undefined;
+  };
+
   return (
     <header className="hero" id="top">
       <div className="herobg">
@@ -104,11 +127,13 @@ export function Hero({ films: propFilms }: { films?: Film[] }) {
             fill
             priority
             sizes="100vw"
+            style={film.focus ? { objectPosition: film.focus } : undefined}
           />
         )}
         <video
           ref={aRef}
           className={ready && active === 0 ? "show" : undefined}
+          style={focusOf(0)}
           muted
           loop
           playsInline
@@ -117,6 +142,7 @@ export function Hero({ films: propFilms }: { films?: Film[] }) {
         <video
           ref={bRef}
           className={ready && active === 1 ? "show" : undefined}
+          style={focusOf(1)}
           muted
           loop
           playsInline

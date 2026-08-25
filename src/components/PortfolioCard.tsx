@@ -21,7 +21,13 @@ export function PortfolioCard({
       </div>
       {item.url && (
         // eslint-disable-next-line @next/next/no-img-element
-        <img className="pfill" src={item.url} alt={item.title} loading="lazy" />
+        <img
+          className="pfill"
+          src={item.url}
+          alt={item.title}
+          loading="lazy"
+          style={item.focus ? { objectPosition: item.focus } : undefined}
+        />
       )}
       <span className="num">{`·0${index + 1}`}</span>
       <div className="ov">

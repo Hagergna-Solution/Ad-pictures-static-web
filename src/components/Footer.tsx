@@ -28,7 +28,7 @@ export function Footer() {
           <div>
             <div className="lab">Contact</div>
             <ul>
-              <li className="mono">+251 92 717 1730</li>
+              <li className="mono">251988130030</li>
               <li>
                 <a
                   className="fl"
