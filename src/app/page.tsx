@@ -1,4 +1,5 @@
-import { getPortfolio, getReels } from "@/lib/api";
+import { getPortfolio } from "@/lib/api";
+import { FILMS, HERO_FILMS, RECENT_FILMS } from "@/lib/content";
 import { Grain } from "@/components/Grain";
 import { Loader } from "@/components/Loader";
 import { Nav } from "@/components/Nav";
@@ -16,18 +17,19 @@ import { Footer } from "@/components/Footer";
 import { FloatingWhatsApp } from "@/components/FloatingWhatsApp";
 
 export default async function Home() {
-  const [portfolio, reels] = await Promise.all([getPortfolio(), getReels()]);
+  // The gallery (Stills) is the only backend-driven section; every video and
+  // reel on the landing page comes from the static R2 assets.
+  const portfolio = await getPortfolio();
 
-  // Split the dynamic reels across the two rails; the hero rotates the first set.
-  const featured = reels.slice(0, 4);
-  const recent = reels.length > 4 ? reels.slice(4) : reels;
+  const featured = FILMS;
+  const recent = RECENT_FILMS;
 
   return (
     <>
       <Grain />
       <Loader />
       <Nav />
-      <Hero films={featured} />
+      <Hero films={HERO_FILMS} />
       <Marquee />
 
       {featured.length > 0 && (

@@ -1,4 +1,4 @@
-// AD Pictures booking number: +251 92 717 1730 (Ethiopia) in wa.me format.
+// AD Pictures booking number: 251988130030 (Ethiopia) in wa.me format.
 const WA_NUM = "251988130030";
 const WA_DEFAULT = "Hi AD Pictures, I would like to book a shoot. My event is";
 

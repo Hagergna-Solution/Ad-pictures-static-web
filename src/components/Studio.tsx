@@ -42,7 +42,7 @@ export function Studio() {
             </div>
             <Image
               className="poster"
-              src="/uploads/photo_61.jpg"
+              src={FILMS[3].poster!}
               alt="A wedding portrait by AD Pictures"
               fill
               sizes="(max-width:860px) 100vw, 50vw"

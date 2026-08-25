@@ -34,7 +34,7 @@ export function BookingCTA() {
           Message us on WhatsApp
         </a>
         <div className="phones">
-          <span className="red">+251 92 717 1730</span>
+          <span className="red">+251988130030</span>
         </div>
       </div>
     </section>

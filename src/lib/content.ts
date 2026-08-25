@@ -11,26 +11,78 @@ export interface Film {
    * Optional: dynamic reels from the backend may not always carry a cover.
    */
   poster?: string;
+  /**
+   * Focal point for the hero crop, as a CSS `object-position` value. These are
+   * 9:16 reels shown in a 16:9 frame, so most of the height is cropped away —
+   * each clip needs its own answer to "which band of the frame holds the shot".
+   * Defaults to the CSS value when omitted.
+   */
+  focus?: string;
+  /**
+   * Seconds into the reel where the hero should enter. Lets the hero open on
+   * the strongest moment rather than whatever the first frame happens to be.
+   */
+  start?: number;
 }
 
 /** Tone cycle used to give dynamic reels a cinematic resting gradient. */
 export const REEL_TONES: Tone[] = ["warm", "red", "low", "cool", "high"];
 
-// The four real vertical reels (1080×1920). Each carries a still poster so the
-// card reads as a finished photograph before the video ever plays.
+/** Public R2 bucket serving all static media (videos, posters, images). */
+export const R2_BASE =
+  "https://pub-c0978e7f876342f9af3932f1f3952107.r2.dev/assets/v1";
+
+/**
+ * Featured reels — the 9:16 cards under "Recent reels".
+ *
+ * Every one of these is a native 720×1280 portrait master, so the card shows the
+ * frame the way it was shot: no crop, no rotation, no upscale. Clips carrying a
+ * burned-in studio watermark (`img_3146`, `img_3149`, `img_1614`) are left out —
+ * a logo stamped across the middle of a 9:16 card is the first thing the eye
+ * lands on.
+ */
 export const FILMS: Film[] = [
-  { src: "/uploads/VID_20260531_075900_120.mp4", title: "The Vow", category: "Wedding Film", tone: "warm", exif: "4K · 24FPS · T2.1", poster: "/uploads/photo_26.jpg" },
-  { src: "/uploads/VID_20260531_080025_723.mp4", title: "Grand Entrance", category: "Event Film", tone: "red", exif: "4K · 24FPS · T2.8", poster: "/uploads/photo_28.jpg" },
-  { src: "/uploads/VID_20260531_080043_009.mp4", title: "Mels Night", category: "Wedding Film", tone: "low", exif: "4K · 24FPS · T2.1", poster: "/uploads/photo_63.jpg" },
-  { src: "/uploads/VID_20260531_080054_116.mp4", title: "First Dance", category: "Wedding Film", tone: "cool", exif: "4K · 24FPS · T2.4", poster: "/uploads/photo_29.jpg" },
+  { src: `${R2_BASE}/videos/img_1561-720.mp4`, title: "The Bride", category: "Wedding Film", tone: "warm", exif: "4K · 24FPS · T2.1", poster: `${R2_BASE}/posters/img_1561-poster.jpg` },
+  { src: `${R2_BASE}/videos/img_1745-720.mp4`, title: "Grand Entrance", category: "Event Film", tone: "red", exif: "4K · 24FPS · T2.8", poster: `${R2_BASE}/posters/img_1745-poster.jpg` },
+  { src: `${R2_BASE}/videos/img_0493-720.mp4`, title: "Gold & White", category: "Wedding Film", tone: "low", exif: "4K · 24FPS · T2.1", poster: `${R2_BASE}/posters/img_0493-poster.jpg` },
+  { src: `${R2_BASE}/videos/img_1747-720.mp4`, title: "First Light", category: "Wedding Film", tone: "cool", exif: "4K · 24FPS · T2.4", poster: `${R2_BASE}/posters/img_1747-poster.jpg` },
 ];
 
-// Recent reels reuse the films with fresh framing and their own posters.
+/**
+ * Hero rotation — its own cut, drawn from the landscape 16:9 masters rather
+ * than the vertical reels above.
+ *
+ * The split is deliberate: a 9:16 reel in a full-bleed hero loses most of its
+ * height to the crop, while these 1280×720 films fill the frame edge to edge at
+ * native shape — no crop, no upscale, so the hero stays sharp. The vertical
+ * reels keep the 9:16 cards downpage, where their shape is the right one.
+ *
+ * Ordered for impact: the wide golden-hour frame opens (its empty left side is
+ * where the headline sits), then the black-and-white portrait, then the
+ * ceremony detail.
+ *
+ * Two of the landscape masters are deliberately not here. `img_1575` carries a
+ * burned-in studio end-card (logo and phone numbers) that lands mid-frame,
+ * straight across the headline; `img_2815` is letterboxed to 2.39:1 inside its
+ * 720p frame, so filling a hero with it means either visible black bars or a
+ * punch-in past what 720p can carry. Both are fine downpage — neither survives
+ * full-bleed. Re-exported clean, either would slot straight in here.
+ */
+export const HERO_FILMS: Film[] = [
+  { src: `${R2_BASE}/videos/img_1998-720.mp4`, title: "Golden Hour", category: "Wedding Film", tone: "warm", exif: "4K · 24FPS · T2.8", poster: `${R2_BASE}/posters/img_1998-poster.jpg` },
+  { src: `${R2_BASE}/videos/img_2003-720.mp4`, title: "The Vow", category: "Wedding Film", tone: "low", exif: "4K · 24FPS · T1.8", poster: `${R2_BASE}/posters/img_2003-poster.jpg` },
+  { src: `${R2_BASE}/videos/img_1581-720.mp4`, title: "The Blessing", category: "Wedding Film", tone: "red", exif: "4K · 24FPS · T2.4", poster: `${R2_BASE}/posters/img_1581-poster.jpg` },
+];
+
+/**
+ * "More moments" — four further portrait masters, so the second rail is genuinely
+ * different footage rather than the featured four relabelled.
+ */
 export const RECENT_FILMS: Film[] = [
-  { ...FILMS[2], title: "The Send-Off", category: "Wedding Film", poster: "/uploads/photo_62.jpg" },
-  { ...FILMS[0], title: "Henna Night", category: "Event Film", poster: "/uploads/photo_27.jpg" },
-  { ...FILMS[3], title: "Golden Hour", category: "Wedding Film", poster: "/uploads/photo_65.jpg" },
-  { ...FILMS[1], title: "The Reception", category: "Event Film", poster: "/uploads/photo_64.jpg" },
+  { src: `${R2_BASE}/videos/img_1558-720.mp4`, title: "The Veil", category: "Wedding Film", tone: "high", exif: "4K · 24FPS · T2.0", poster: `${R2_BASE}/posters/img_1558-poster.jpg` },
+  { src: `${R2_BASE}/videos/img_3147-720.mp4`, title: "Habesha", category: "Event Film", tone: "cool", exif: "4K · 24FPS · T2.2", poster: `${R2_BASE}/posters/img_3147-poster.jpg` },
+  { src: `${R2_BASE}/videos/img_1603-720.mp4`, title: "The Send-Off", category: "Wedding Film", tone: "warm", exif: "4K · 24FPS · T2.8", poster: `${R2_BASE}/posters/img_1603-poster.jpg` },
+  { src: `${R2_BASE}/videos/img_1748-720.mp4`, title: "Night Drive", category: "Event Film", tone: "low", exif: "4K · 24FPS · T1.8", poster: `${R2_BASE}/posters/img_1748-poster.jpg` },
 ];
 
 export interface Service {
@@ -124,7 +176,33 @@ export interface PortfolioItem {
   url?: string;
   category?: string;
   tags?: string[];
+  /**
+   * Focal point for the 4:3 card crop, as a CSS `object-position`. Portrait
+   * frames lose most of their height in a landscape card, so the ones that
+   * matter say where to hold. Omitted for landscape stills, which need no help.
+   */
+  focus?: string;
 }
+
+/**
+ * The contact sheet — hand-picked frames at their full 1280×720 / 720×1280
+ * masters.
+ *
+ * Deliberately not the `images/*.webp` set: those top out between 360px and
+ * 960px and most carry an @adpictures_ethio watermark burned into the corner,
+ * which is fine for a feed and visibly rough in a card. These frames are clean
+ * and roughly twice the resolution.
+ */
+export const CURATED_STILLS: PortfolioItem[] = [
+  { title: "Golden Hour", category: "wedding", tags: ["wedding", "portrait"], url: `${R2_BASE}/posters/img_1998-poster.jpg` },
+  { title: "The Bride", category: "wedding", tags: ["wedding", "portrait"], url: `${R2_BASE}/posters/img_1561-poster.jpg`, focus: "50% 32%" },
+  { title: "The Vow", category: "wedding", tags: ["wedding", "film"], url: `${R2_BASE}/posters/img_2003-poster.jpg` },
+  { title: "Grand Entrance", category: "event", tags: ["event", "portrait"], url: `${R2_BASE}/posters/img_1745-poster.jpg`, focus: "50% 28%" },
+  { title: "The Blessing", category: "wedding", tags: ["wedding", "ceremony"], url: `${R2_BASE}/posters/img_1581-poster.jpg` },
+  { title: "Habesha", category: "event", tags: ["event", "portrait"], url: `${R2_BASE}/posters/img_3147-poster.jpg`, focus: "50% 34%" },
+  { title: "The Detail", category: "wedding", tags: ["wedding", "detail"], url: `${R2_BASE}/posters/img_1612-poster.jpg` },
+  { title: "The Send-Off", category: "wedding", tags: ["wedding", "portrait"], url: `${R2_BASE}/posters/img_1603-poster.jpg`, focus: "50% 40%" },
+];
 
 export interface Faq {
   q: string;

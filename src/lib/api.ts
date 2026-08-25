@@ -1,5 +1,11 @@
 import type { MediaItem, MediaType, PortfolioItem, Film } from "./content";
-import { FILMS, RECENT_FILMS, REEL_TONES } from "./content";
+import {
+  FILMS,
+  RECENT_FILMS,
+  REEL_TONES,
+  R2_BASE,
+  CURATED_STILLS,
+} from "./content";
 
 /**
  * Content API client.
@@ -162,7 +168,7 @@ export async function getPortfolio(category?: string): Promise<PortfolioItem[]> 
     return fallback();
   }
 
-  return items
+  const mapped = items
     .map((p) => ({
       title: p.title ?? "",
       description: p.description,
@@ -171,22 +177,33 @@ export async function getPortfolio(category?: string): Promise<PortfolioItem[]> 
       tags: p.tags,
     }))
     .filter((p) => Boolean(p.url));
+
+  // Live items lead; the curated frames follow so the sheet is full and
+  // consistently good even while the backend catalogue is still small.
+  return [...mapped, ...curatedStills(category)];
+}
+
+/** The curated frames, filtered to a service slug when one is in play. */
+function curatedStills(category?: string): PortfolioItem[] {
+  return category
+    ? CURATED_STILLS.filter((s) => matchesCategory(s.category, category))
+    : CURATED_STILLS;
 }
 
 /* ---------- public reels (landing-page films) ---------- */
 
 /**
- * Static reel covers from public/uploads (vertical photos that suit the 9:16
- * reel cards). Used as the resting still when an item has no cover image.
+ * Portrait poster frames that suit the 9:16 reel cards. Used as the resting
+ * still when a backend item has no cover image of its own.
  */
 const REEL_COVERS: readonly string[] = [
-  "/uploads/photo_26.jpg",
-  "/uploads/photo_28.jpg",
-  "/uploads/photo_63.jpg",
-  "/uploads/photo_29.jpg",
-  "/uploads/photo_62.jpg",
-  "/uploads/photo_27.jpg",
-  "/uploads/photo_61.jpg",
+  `${R2_BASE}/posters/img_1561-poster.jpg`,
+  `${R2_BASE}/posters/img_1745-poster.jpg`,
+  `${R2_BASE}/posters/img_0493-poster.jpg`,
+  `${R2_BASE}/posters/img_1747-poster.jpg`,
+  `${R2_BASE}/posters/img_1558-poster.jpg`,
+  `${R2_BASE}/posters/img_3147-poster.jpg`,
+  `${R2_BASE}/posters/img_1603-poster.jpg`,
 ];
 
 /**
@@ -225,30 +242,16 @@ export async function getReels(): Promise<Film[]> {
       });
     }
   }
-  return reels;
+  // Backend reachable but has no featured reels yet — fall back to the
+  // built-in R2 reels so the landing page is never empty.
+  return reels.length ? reels : fallback();
 }
 
 /* ---------- placeholder portfolio (used until the backend is live) ---------- */
 
-const PORTFOLIO_TEMPLATE: ReadonlyArray<{
-  title: string;
-  category: string;
-  url: string;
-}> = [
-  { title: "The Vow", category: "wedding", url: "/uploads/photo_26.jpg" },
-  { title: "Garden Frame", category: "wedding", url: "/uploads/photo_61.jpg" },
-  { title: "The Reception", category: "event", url: "/uploads/photo_64.jpg" },
-  { title: "First Look", category: "wedding", url: "/uploads/photo_28.jpg" },
-  { title: "The Party", category: "portrait", url: "/uploads/photo_62.jpg" },
-  { title: "Night Walk", category: "wedding", url: "/uploads/photo_65.jpg" },
-];
-
+/** With no backend, the contact sheet is simply the curated frames. */
 function placeholderPortfolio(): PortfolioItem[] {
-  return PORTFOLIO_TEMPLATE.map((t) => ({
-    title: t.title,
-    category: t.category,
-    url: t.url,
-  }));
+  return [...CURATED_STILLS];
 }
 
 /* ---------- placeholder media (used until the backend is live) ---------- */
