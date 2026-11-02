@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
-import Image from "next/image";
 import Link from "next/link";
 import { site, absoluteUrl } from "@/lib/site";
-import { COURSES, COURSE_FAQS, COURSE_LEVEL, COURSE_WEEKS, R2_BASE } from "@/lib/content";
+import { COURSES, COURSE_FAQS, COURSE_WEEKS } from "@/lib/content";
 import { breadcrumbSchema, courseListSchema, faqSchema } from "@/lib/schema";
 import { JsonLd } from "@/components/JsonLd";
 import { Grain } from "@/components/Grain";
@@ -11,11 +10,10 @@ import { CourseRegistration } from "@/components/CourseRegistration";
 import { Footer } from "@/components/Footer";
 import { FloatingWhatsApp } from "@/components/FloatingWhatsApp";
 
-const TITLE = "Masterclasses: Wedding Photography & Videography Courses";
 const DESCRIPTION = `Two-week basic masterclasses in wedding photography, videography and editing at ${site.name}, Bole Medhanialem, Addis Ababa. Register online in a minute.`;
 
 export const metadata: Metadata = {
-  title: TITLE,
+  title: "Masterclasses",
   description: DESCRIPTION,
   alternates: { canonical: "/courses" },
   openGraph: {
@@ -40,67 +38,34 @@ export default function CoursesPage() {
       <Grain />
       <Nav />
       <main className="academy">
-        <header className="ac-hero">
-          <Image
-            className="ac-hero-bg"
-            src={`${R2_BASE}/posters/img_1998-poster.jpg`}
-            alt=""
-            fill
-            priority
-            sizes="100vw"
-            aria-hidden="true"
-          />
-          <div className="ac-hero-shade" aria-hidden="true" />
-          <div className="wrap ac-hero-in">
-            <Link className="back" href="/">
-              ← Back home
+        <header className="rg-head">
+          <div className="rg-wrap">
+            <Link className="rg-back" href="/">
+              ← Home
             </Link>
-            <span className="eyebrow">AD Pictures Academy · Think · Imagine · Create</span>
-            <h1>
-              Master<wbr />classes<span className="red">.</span>
-            </h1>
-            <p className="ac-tag">
-              <span className="red">{COURSE_WEEKS} weeks</span> per masterclass · {COURSE_LEVEL}
+            <span className="eyebrow">AD Pictures Academy</span>
+            <h1>Masterclasses</h1>
+            <p className="rg-lead">
+              Learn wedding photography, videography and editing with our team. Pick your courses, leave your
+              number and we will call you to confirm the details.
             </p>
-            <p className="ac-hero-lead">
-              Learn wedding photography, videography and editing from the team behind 3,600+ stories. Small
-              hands-on classes at our studio in Bole Medhanialem.
-            </p>
-            <div className="ac-hero-ctas">
-              <a className="btn-primary" href="#register">
-                Register now
-              </a>
-              <a className="btn-ghost" href="#masterclasses">
-                See the courses
-              </a>
-            </div>
-            <dl className="ac-facts">
-              <div>
-                <dt>Masterclasses</dt>
-                <dd>{String(COURSES.length).padStart(2, "0")}</dd>
-              </div>
-              <div>
-                <dt>Weeks each</dt>
-                <dd>{String(COURSE_WEEKS).padStart(2, "0")}</dd>
-              </div>
-              <div>
-                <dt>Level</dt>
-                <dd>Basic</dd>
-              </div>
-              <div>
-                <dt>Studio</dt>
-                <dd>Bole</dd>
-              </div>
-            </dl>
+            <ul className="rg-facts">
+              <li>{COURSE_WEEKS} weeks per course</li>
+              <li>Basic level, no experience needed</li>
+              <li>Studio in Bole Medhanialem</li>
+            </ul>
           </div>
         </header>
 
-        <CourseRegistration />
+        <section className="rg-body" id="register" aria-label="Register for a masterclass">
+          <div className="rg-wrap">
+            <CourseRegistration />
+          </div>
+        </section>
 
-        <section className="faq ac-faq" id="faq">
-          <div className="wrap">
-            <span className="eyebrow">Good to know</span>
-            <h2>Before you register.</h2>
+        <section className="rg-faq" aria-labelledby="rg-faq-title">
+          <div className="rg-wrap">
+            <h2 id="rg-faq-title">Good to know</h2>
             <div className="faq-list">
               {COURSE_FAQS.map((f) => (
                 <details className="faq-item" key={f.q}>
@@ -114,10 +79,6 @@ export default function CoursesPage() {
             </div>
           </div>
         </section>
-
-        <p className="ac-motto wrap" aria-hidden="true">
-          Learn. Shoot. Edit. <span className="red">Create.</span>
-        </p>
       </main>
       <Footer />
       <FloatingWhatsApp />

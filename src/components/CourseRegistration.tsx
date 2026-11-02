@@ -10,30 +10,7 @@ import {
   HEARD_FROM_OPTIONS,
   SCHEDULE_OPTIONS,
 } from "@/lib/content";
-import {
-  registerForCourse,
-  registrationEnabled,
-  RegistrationError,
-  type CourseRegistrationResult,
-} from "@/lib/api";
-import { waLink } from "@/lib/whatsapp";
-import { ArrowIcon, WhatsAppIcon } from "./icons";
-
-function PlusIcon() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.9} strokeLinecap="round" aria-hidden="true">
-      <path d="M12 5v14M5 12h14" />
-    </svg>
-  );
-}
-
-function CheckIcon() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <path d="M5 12.5l4.5 4.5L19 7.5" />
-    </svg>
-  );
-}
+import { registerForCourse, RegistrationError, type CourseRegistrationResult } from "@/lib/api";
 
 type Values = {
   courses: string[];
@@ -73,28 +50,19 @@ function normalizePhone(raw: string): string | null {
 
 function validate(v: Values): Errors {
   const e: Errors = {};
-  if (v.courses.length === 0) e.courses = "Choose at least one masterclass.";
+  if (v.courses.length === 0) e.courses = "Choose at least one course.";
   if (v.fullName.trim().length < 2) e.fullName = "Enter your full name.";
-  if (!normalizePhone(v.phone)) e.phone = "Enter a valid phone number, e.g. 0911 223344 or +251 911 223344.";
+  if (!normalizePhone(v.phone)) e.phone = "Enter a valid phone number, e.g. 0911 223344.";
   if (v.email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.email.trim())) e.email = "Check the email address, or leave it empty.";
   return e;
 }
 
-function courseName(code: string): string {
-  return COURSES.find((c) => c.code === code)?.name ?? code;
-}
-
-/** "A", "A and B", "A, B and C" */
-function joinNames(names: string[]): string {
-  return names.length <= 1 ? (names[0] ?? "") : `${names.slice(0, -1).join(", ")} and ${names[names.length - 1]}`;
-}
-
-function whatsappMessage(v: Values): string {
-  const picked = v.courses.length ? joinNames(v.courses.map(courseName)) : "your";
-  const lines = [`Hi AD Pictures, I would like to register for the ${picked} masterclass${v.courses.length > 1 ? "es" : ""}.`];
-  if (v.fullName.trim()) lines.push(`Name: ${v.fullName.trim()}`);
-  if (v.phone.trim()) lines.push(`Phone: ${v.phone.trim()}`);
-  return lines.join("\n");
+function CheckMark() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={3} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M5 12.5l4.5 4.5L19 7.5" />
+    </svg>
+  );
 }
 
 export function CourseRegistration() {
@@ -102,36 +70,27 @@ export function CourseRegistration() {
   const [errors, setErrors] = useState<Errors>({});
   const [submitting, setSubmitting] = useState(false);
   const [result, setResult] = useState<CourseRegistrationResult | null>(null);
-  const formRef = useRef<HTMLDivElement>(null);
+  const topRef = useRef<HTMLDivElement>(null);
 
-  // A link like /courses?course=wedding_videography#register preselects the course.
+  // /courses?course=wedding_videography preselects that course.
   useEffect(() => {
     const code = new URLSearchParams(window.location.search).get("course");
-    if (code && COURSES.some((c) => c.code === code)) {
-      setValues((v) => ({ ...v, courses: [code] }));
-    }
+    if (code && COURSES.some((c) => c.code === code)) setValues((v) => ({ ...v, courses: [code] }));
   }, []);
+
+  // Bring the confirmation into view once it has rendered (the form above it is taller).
+  useEffect(() => {
+    if (result) topRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, [result]);
 
   function set<K extends keyof Values>(key: K, value: Values[K]) {
     setValues((v) => ({ ...v, [key]: value }));
     if (errors[key] || errors.form) setErrors((e) => ({ ...e, [key]: undefined, form: undefined }));
   }
 
-  function toggleEquipment(value: string) {
-    set(
-      "equipment",
-      values.equipment.includes(value)
-        ? values.equipment.filter((x) => x !== value)
-        : [...values.equipment, value],
-    );
-  }
-
-  /** Add or remove a course; keeps the catalog order so the summary reads naturally. */
-  function toggleCourse(code: string) {
-    const next = values.courses.includes(code)
-      ? values.courses.filter((c) => c !== code)
-      : COURSES.map((c) => c.code).filter((c) => c === code || values.courses.includes(c));
-    set("courses", next);
+  function toggle(key: "courses" | "equipment", value: string, order: readonly string[]) {
+    const list = values[key];
+    set(key, list.includes(value) ? list.filter((x) => x !== value) : order.filter((x) => x === value || list.includes(x)));
   }
 
   async function onSubmit(ev: FormEvent<HTMLFormElement>) {
@@ -139,18 +98,12 @@ export function CourseRegistration() {
     const found = validate(values);
     setErrors(found);
     if (Object.keys(found).length) {
-      const first = Object.keys(found)[0];
-      document.getElementById(`reg-${first}`)?.focus();
+      document.getElementById(`reg-${Object.keys(found)[0]}`)?.focus();
       return;
     }
-    if (!registrationEnabled) {
-      window.open(waLink(whatsappMessage(values)), "_blank", "noopener,noreferrer");
-      return;
-    }
-
     setSubmitting(true);
     try {
-      const reg = await registerForCourse({
+      const res = await registerForCourse({
         courses: values.courses,
         fullName: values.fullName.trim(),
         phone: values.phone.trim(),
@@ -161,14 +114,13 @@ export function CourseRegistration() {
         heardFrom: values.heardFrom || undefined,
         message: values.message.trim() || undefined,
       });
-      setResult(reg);
-      requestAnimationFrame(() => formRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }));
+      setResult(res);
     } catch (err) {
       if (err instanceof RegistrationError && Object.keys(err.fields).length) {
         const fields = Object.fromEntries(
-          Object.entries(err.fields).map(([k, msg]) => [k.startsWith("courses") || k === "course" ? "courses" : k, msg]),
+          Object.entries(err.fields).map(([k, msg]) => [k.startsWith("course") ? "courses" : k, msg]),
         );
-        setErrors({ ...fields, form: "Please fix the highlighted fields." } as Errors);
+        setErrors({ ...fields, form: "Please check the highlighted fields." } as Errors);
       } else {
         setErrors({ form: err instanceof Error ? err.message : "Something went wrong. Please try again." });
       }
@@ -177,370 +129,249 @@ export function CourseRegistration() {
     }
   }
 
-  function registerAnother() {
-    setResult(null);
-    setValues((v) => ({ ...EMPTY, fullName: v.fullName, phone: v.phone, email: v.email }));
-    setErrors({});
-  }
-
   const fieldProps = (key: keyof Values) => ({
     id: `reg-${key}`,
     "aria-invalid": errors[key] ? true : undefined,
     "aria-describedby": errors[key] ? `reg-${key}-err` : undefined,
   });
 
-  const ErrorText = ({ k }: { k: keyof Values }) =>
+  const err = (k: keyof Values) =>
     errors[k] ? (
-      <p className="ac-err" id={`reg-${k}-err`} role="alert">
+      <p className="rg-err" id={`reg-${k}-err`} role="alert">
         {errors[k]}
       </p>
     ) : null;
 
+  return <div className="rg-anchor" ref={topRef}>{result ? renderDone(result) : renderForm()}</div>;
+
+  function renderDone(result: CourseRegistrationResult) {
+    const first = values.fullName.trim().split(/\s+/)[0];
+    return (
+      <div className="rg-card rg-done" role="status" aria-live="polite">
+        <span className="rg-done-icon">
+          <CheckMark />
+        </span>
+        <h2>You&apos;re registered, {first}.</h2>
+        <p>
+          We will call you on <strong>{values.phone.trim()}</strong> to confirm the start date, class times and fee.
+        </p>
+        <ul className="rg-refs">
+          {result.registrations.map((r) => (
+            <li key={r.reference}>
+              <span>{r.courseName}</span>
+              <code>{r.reference}</code>
+            </li>
+          ))}
+        </ul>
+        {result.alreadyRegistered.length > 0 && (
+          <p className="rg-muted">
+            Already registered before: {result.alreadyRegistered.map((a) => `${a.courseName} (${a.reference})`).join(", ")}.
+          </p>
+        )}
+        <div className="rg-done-actions">
+          <button
+            type="button"
+            className="rg-btn rg-btn-ghost"
+            onClick={() => {
+              setResult(null);
+              setValues((v) => ({ ...EMPTY, fullName: v.fullName, phone: v.phone, email: v.email }));
+            }}
+          >
+            Register for another course
+          </button>
+          <Link className="rg-link" href="/">
+            Back to home
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  function renderForm() {
+  const count = values.courses.length;
+
   return (
-    <>
-      {/* ---------- the four masterclasses ---------- */}
-      <section className="ac-courses" id="masterclasses" aria-labelledby="ac-courses-title">
-        <div className="wrap">
-          <span className="eyebrow">The masterclasses</span>
-          <h2 id="ac-courses-title" className="ac-h2">
-            Four courses. <span className="red">Two weeks each.</span>
-          </h2>
-          <ol className="ac-list">
-            {COURSES.map((c, i) => {
-              const on = values.courses.includes(c.code);
-              return (
-                <li key={c.code} className={`ac-row${on ? " on" : ""}`}>
-                  <span className="ac-idx">{String(i + 1).padStart(2, "0")}</span>
-                  <div className="ac-main">
-                    <h3 className="ac-name">{c.name}</h3>
-                    <p className="ac-sum">{c.summary}</p>
-                    <ul className="ac-out">
-                      {c.outcomes.map((o) => (
-                        <li key={o}>{o}</li>
-                      ))}
-                    </ul>
-                  </div>
-                  <div className="ac-side">
-                    <span className="ac-meta">
-                      {c.track} · {COURSE_WEEKS} weeks · Basic
-                    </span>
-                    <button
-                      type="button"
-                      className="ac-pick"
-                      onClick={() => toggleCourse(c.code)}
-                      aria-pressed={on}
-                      aria-label={`${on ? "Remove" : "Add"} ${c.name}`}
-                    >
-                      {on ? "Added" : "Add"}
-                      {on ? <CheckIcon /> : <PlusIcon />}
-                    </button>
-                  </div>
-                </li>
-              );
-            })}
-          </ol>
-          <div className={`ac-selbar${values.courses.length ? " show" : ""}`} aria-live="polite">
-            <p>
-              {values.courses.length === 0
-                ? "Add one or more masterclasses to register."
-                : `${values.courses.length} selected: ${joinNames(values.courses.map(courseName))}`}
-            </p>
-            {values.courses.length > 0 && (
-              <button type="button" className="btn-primary" onClick={() => formRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })}>
-                Continue to register
-                <ArrowIcon className="ar" />
-              </button>
-            )}
-          </div>
-        </div>
-      </section>
-
-      {/* ---------- registration ---------- */}
-      <section className="ac-register" id="register" aria-labelledby="ac-register-title">
-        <div className="wrap ac-grid">
-          <aside className="ac-aside">
-            <span className="eyebrow">Register</span>
-            <h2 id="ac-register-title" className="ac-h2">
-              Save your <span className="red">seat.</span>
-            </h2>
-            <p className="ac-lead">
-              It takes a minute. No payment now: we call you to confirm the start date, class times and fee.
-            </p>
-            <ol className="ac-steps">
-              <li>
-                <span className="n">1</span>
-                <div>
-                  <strong>Pick your masterclasses</strong>
-                  <p>Choose one or more, then add your name and phone number.</p>
-                </div>
-              </li>
-              <li>
-                <span className="n">2</span>
-                <div>
-                  <strong>We call you</strong>
-                  <p>Usually within one working day, to confirm your schedule and fee.</p>
-                </div>
-              </li>
-              <li>
-                <span className="n">3</span>
-                <div>
-                  <strong>Learn. Shoot. Edit. Create.</strong>
-                  <p>Two weeks of hands-on classes at our studio in Bole Medhanialem.</p>
-                </div>
-              </li>
-            </ol>
-            <a className="ac-help" href={waLink("Hi AD Pictures, I have a question about the masterclasses.")} target="_blank" rel="noopener noreferrer">
-              <WhatsAppIcon className="wa" />
-              Questions? Ask us on WhatsApp
-            </a>
-          </aside>
-
-          <div className="ac-card" ref={formRef}>
-            {result ? (
-              <div className="ac-done" role="status" aria-live="polite">
-                <span className="ac-check" aria-hidden="true">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M5 12.5l4.5 4.5L19 7.5" />
-                  </svg>
+    <form className="rg-card" onSubmit={onSubmit} noValidate>
+      {/* 1 — courses */}
+      <fieldset className="rg-step">
+        <legend>
+          <span className="rg-num">1</span>
+          Choose your courses
+          <span className="rg-hint">one or more</span>
+        </legend>
+        <div className="rg-courses" id="reg-courses" tabIndex={-1} aria-describedby={errors.courses ? "reg-courses-err" : undefined}>
+          {COURSES.map((c) => {
+            const on = values.courses.includes(c.code);
+            return (
+              <label key={c.code} className={`rg-course${on ? " on" : ""}`}>
+                <input
+                  type="checkbox"
+                  name="courses"
+                  value={c.code}
+                  checked={on}
+                  onChange={() => toggle("courses", c.code, COURSES.map((x) => x.code))}
+                />
+                <span className="rg-box" aria-hidden="true">
+                  <CheckMark />
                 </span>
-                <h3>You&apos;re registered.</h3>
-                <p>
-                  Thank you, {values.fullName.trim().split(/\s+/)[0]}. Your seat request
-                  {result.registrations.length > 1 ? "s are" : " is"} in. We will call you on{" "}
-                  <strong>{values.phone.trim()}</strong> to confirm the start date and fee.
-                </p>
-                <ul className="ac-refs">
-                  {result.registrations.map((r) => (
-                    <li key={r.reference} className="ac-ref">
-                      <span>{r.courseName}</span>
-                      <strong>{r.reference}</strong>
-                    </li>
-                  ))}
-                </ul>
-                {result.alreadyRegistered.length > 0 && (
-                  <p className="ac-note">
-                    You were already registered for {joinNames(result.alreadyRegistered.map((a) => `${a.courseName} (${a.reference})`))}, so
-                    we kept that registration.
-                  </p>
-                )}
-                <div className="ac-done-actions">
-                  <button type="button" className="btn-ghost" onClick={registerAnother}>
-                    Register for another course
-                  </button>
-                  <Link className="ac-link" href="/">
-                    Back to the studio
-                  </Link>
-                </div>
-              </div>
-            ) : (
-              <form onSubmit={onSubmit} noValidate>
-                <fieldset className="ac-fs">
-                  <legend className="ac-label">
-                    Masterclasses <span className="req">*</span> <span className="opt">choose one or more</span>
-                  </legend>
-                  <div
-                    className="ac-options ac-course-opts"
-                    id="reg-courses"
-                    tabIndex={-1}
-                    aria-describedby={errors.courses ? "reg-courses-err" : undefined}
-                  >
-                    {COURSES.map((c, i) => {
-                      const on = values.courses.includes(c.code);
-                      return (
-                        <label key={c.code} className={`ac-course-opt${on ? " on" : ""}`}>
-                          <input type="checkbox" name="courses" value={c.code} checked={on} onChange={() => toggleCourse(c.code)} />
-                          <span className="i">{String(i + 1).padStart(2, "0")}</span>
-                          <span className="t">{c.name}</span>
-                          <span className="m">
-                            {c.track} · {COURSE_WEEKS} weeks
-                          </span>
-                        </label>
-                      );
-                    })}
-                  </div>
-                  <ErrorText k="courses" />
-                </fieldset>
+                <span className="rg-course-body">
+                  <span className="rg-course-name">{c.name}</span>
+                  <span className="rg-course-sum">{c.summary}</span>
+                  <span className="rg-course-meta">
+                    {c.track} · {COURSE_WEEKS} weeks
+                  </span>
+                </span>
+              </label>
+            );
+          })}
+        </div>
+        {err("courses")}
+      </fieldset>
 
-                <div className="ac-row2">
-                  <div className="ac-field ac-span2">
-                    <label className="ac-label" htmlFor="reg-fullName">
-                      Full name <span className="req">*</span>
-                    </label>
-                    <input
-                      {...fieldProps("fullName")}
-                      className="ac-input"
-                      autoComplete="name"
-                      value={values.fullName}
-                      onChange={(e) => set("fullName", e.target.value)}
-                      placeholder="e.g. Selam Abebe"
-                      maxLength={100}
-                    />
-                    <ErrorText k="fullName" />
-                  </div>
-                  <div className="ac-field">
-                    <label className="ac-label" htmlFor="reg-phone">
-                      Phone number <span className="req">*</span>
-                    </label>
-                    <input
-                      {...fieldProps("phone")}
-                      className="ac-input"
-                      type="tel"
-                      inputMode="tel"
-                      autoComplete="tel"
-                      value={values.phone}
-                      onChange={(e) => set("phone", e.target.value)}
-                      placeholder="0911 223344"
-                      maxLength={32}
-                    />
-                    <ErrorText k="phone" />
-                  </div>
-                  <div className="ac-field">
-                    <label className="ac-label" htmlFor="reg-email">
-                      Email <span className="opt">optional</span>
-                    </label>
-                    <input
-                      {...fieldProps("email")}
-                      className="ac-input"
-                      type="email"
-                      inputMode="email"
-                      autoComplete="email"
-                      value={values.email}
-                      onChange={(e) => set("email", e.target.value)}
-                      placeholder="you@example.com"
-                      maxLength={254}
-                    />
-                    <ErrorText k="email" />
-                  </div>
-                </div>
-
-                <fieldset className="ac-fs">
-                  <legend className="ac-label">Your experience</legend>
-                  <div className="ac-options">
-                    {EXPERIENCE_OPTIONS.map((o) => (
-                      <label key={o.value} className={`ac-chip${values.experience === o.value ? " on" : ""}`}>
-                        <input
-                          type="radio"
-                          name="experience"
-                          value={o.value}
-                          checked={values.experience === o.value}
-                          onChange={() => set("experience", o.value)}
-                        />
-                        {o.label}
-                      </label>
-                    ))}
-                  </div>
-                </fieldset>
-
-                <fieldset className="ac-fs">
-                  <legend className="ac-label">
-                    Equipment <span className="opt">tick what you have</span>
-                  </legend>
-                  <div className="ac-options">
-                    {EQUIPMENT_OPTIONS.map((o) => (
-                      <label key={o.value} className={`ac-chip${values.equipment.includes(o.value) ? " on" : ""}`}>
-                        <input
-                          type="checkbox"
-                          value={o.value}
-                          checked={values.equipment.includes(o.value)}
-                          onChange={() => toggleEquipment(o.value)}
-                        />
-                        {o.label}
-                      </label>
-                    ))}
-                  </div>
-                </fieldset>
-
-                <fieldset className="ac-fs">
-                  <legend className="ac-label">
-                    Best time for classes <span className="opt">optional</span>
-                  </legend>
-                  <div className="ac-options">
-                    {SCHEDULE_OPTIONS.map((o) => (
-                      <label key={o.value} className={`ac-chip${values.preferredSchedule === o.value ? " on" : ""}`}>
-                        <input
-                          type="radio"
-                          name="preferredSchedule"
-                          value={o.value}
-                          checked={values.preferredSchedule === o.value}
-                          onChange={() => set("preferredSchedule", o.value)}
-                        />
-                        {o.label}
-                      </label>
-                    ))}
-                  </div>
-                </fieldset>
-
-                <div className="ac-row2">
-                  <div className="ac-field">
-                    <label className="ac-label" htmlFor="reg-heardFrom">
-                      How did you hear about us? <span className="opt">optional</span>
-                    </label>
-                    <select
-                      {...fieldProps("heardFrom")}
-                      className="ac-input ac-select"
-                      value={values.heardFrom}
-                      onChange={(e) => set("heardFrom", e.target.value)}
-                    >
-                      <option value="">Choose one</option>
-                      {HEARD_FROM_OPTIONS.map((o) => (
-                        <option key={o.value} value={o.value}>
-                          {o.label}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <div className="ac-field ac-span2">
-                    <label className="ac-label" htmlFor="reg-message">
-                      Anything we should know? <span className="opt">optional</span>
-                    </label>
-                    <textarea
-                      {...fieldProps("message")}
-                      className="ac-input ac-textarea"
-                      rows={3}
-                      value={values.message}
-                      onChange={(e) => set("message", e.target.value)}
-                      placeholder="Questions, preferred start date, what you want to learn…"
-                      maxLength={1000}
-                    />
-                    <ErrorText k="message" />
-                  </div>
-                </div>
-
-                {errors.form && (
-                  <div className="ac-alert" role="alert">
-                    <p>{errors.form}</p>
-                    <a href={waLink(whatsappMessage(values))} target="_blank" rel="noopener noreferrer">
-                      Or register on WhatsApp instead
-                    </a>
-                  </div>
-                )}
-
-                <button type="submit" className="btn-primary ac-submit" disabled={submitting}>
-                  {registrationEnabled ? (
-                    <>
-                      {submitting
-                        ? "Sending…"
-                        : values.courses.length > 1
-                          ? `Register for ${values.courses.length} masterclasses`
-                          : "Register for the masterclass"}
-                      {!submitting && <ArrowIcon className="ar" />}
-                    </>
-                  ) : (
-                    <>
-                      <WhatsAppIcon className="wa" />
-                      Register on WhatsApp
-                    </>
-                  )}
-                </button>
-                <p className="ac-fine">
-                  We only use your details to arrange your class. See our{" "}
-                  <Link href="/privacy">privacy policy</Link>.
-                </p>
-              </form>
-            )}
+      {/* 2 — contact */}
+      <fieldset className="rg-step">
+        <legend>
+          <span className="rg-num">2</span>
+          Your details
+        </legend>
+        <div className="rg-grid">
+          <div className="rg-field rg-full">
+            <label htmlFor="reg-fullName">Full name</label>
+            <input
+              {...fieldProps("fullName")}
+              className="rg-input"
+              autoComplete="name"
+              value={values.fullName}
+              onChange={(e) => set("fullName", e.target.value)}
+              placeholder="Selam Abebe"
+              maxLength={100}
+            />
+            {err("fullName")}
+          </div>
+          <div className="rg-field">
+            <label htmlFor="reg-phone">Phone number</label>
+            <input
+              {...fieldProps("phone")}
+              className="rg-input"
+              type="tel"
+              inputMode="tel"
+              autoComplete="tel"
+              value={values.phone}
+              onChange={(e) => set("phone", e.target.value)}
+              placeholder="0911 223344"
+              maxLength={32}
+            />
+            {err("phone")}
+          </div>
+          <div className="rg-field">
+            <label htmlFor="reg-email">
+              Email <span className="rg-hint">optional</span>
+            </label>
+            <input
+              {...fieldProps("email")}
+              className="rg-input"
+              type="email"
+              inputMode="email"
+              autoComplete="email"
+              value={values.email}
+              onChange={(e) => set("email", e.target.value)}
+              placeholder="you@example.com"
+              maxLength={254}
+            />
+            {err("email")}
           </div>
         </div>
-      </section>
-    </>
+      </fieldset>
+
+      {/* 3 — optional context */}
+      <fieldset className="rg-step">
+        <legend>
+          <span className="rg-num">3</span>
+          About you
+          <span className="rg-hint">optional</span>
+        </legend>
+        <div className="rg-grid">
+          <div className="rg-field">
+            <label htmlFor="reg-experience">Experience</label>
+            <select {...fieldProps("experience")} className="rg-input rg-select" value={values.experience} onChange={(e) => set("experience", e.target.value)}>
+              {EXPERIENCE_OPTIONS.map((o) => (
+                <option key={o.value} value={o.value}>
+                  {o.label}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="rg-field">
+            <label htmlFor="reg-preferredSchedule">Best time for classes</label>
+            <select
+              {...fieldProps("preferredSchedule")}
+              className="rg-input rg-select"
+              value={values.preferredSchedule}
+              onChange={(e) => set("preferredSchedule", e.target.value)}
+            >
+              <option value="">Any time</option>
+              {SCHEDULE_OPTIONS.map((o) => (
+                <option key={o.value} value={o.value}>
+                  {o.label}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="rg-field">
+            <label htmlFor="reg-heardFrom">How did you hear about us?</label>
+            <select {...fieldProps("heardFrom")} className="rg-input rg-select" value={values.heardFrom} onChange={(e) => set("heardFrom", e.target.value)}>
+              <option value="">Choose one</option>
+              {HEARD_FROM_OPTIONS.map((o) => (
+                <option key={o.value} value={o.value}>
+                  {o.label}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="rg-field">
+            <span className="rg-label">Equipment you have</span>
+            <div className="rg-checks">
+              {EQUIPMENT_OPTIONS.map((o) => (
+                <label key={o.value} className="rg-check">
+                  <input
+                    type="checkbox"
+                    checked={values.equipment.includes(o.value)}
+                    onChange={() => toggle("equipment", o.value, EQUIPMENT_OPTIONS.map((x) => x.value))}
+                  />
+                  {o.value === "camera" ? "Camera" : "Laptop"}
+                </label>
+              ))}
+            </div>
+          </div>
+          <div className="rg-field rg-full">
+            <label htmlFor="reg-message">Message</label>
+            <textarea
+              {...fieldProps("message")}
+              className="rg-input rg-textarea"
+              rows={3}
+              value={values.message}
+              onChange={(e) => set("message", e.target.value)}
+              placeholder="Questions or a preferred start date"
+              maxLength={1000}
+            />
+            {err("message")}
+          </div>
+        </div>
+      </fieldset>
+
+      {errors.form && (
+        <p className="rg-alert" role="alert">
+          {errors.form}
+        </p>
+      )}
+
+      <button type="submit" className="rg-btn rg-submit" disabled={submitting}>
+        {submitting ? "Sending…" : count > 1 ? `Register for ${count} courses` : "Register"}
+      </button>
+      <p className="rg-fine">
+        No payment now. We only use your details to arrange your class (<Link href="/privacy">privacy</Link>).
+      </p>
+    </form>
   );
+  }
 }

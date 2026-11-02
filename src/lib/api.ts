@@ -326,8 +326,12 @@ export class RegistrationError extends Error {
   }
 }
 
-/** True when a backend is configured; without one the page falls back to WhatsApp. */
-export const registrationEnabled = Boolean(BASE);
+/**
+ * Backend for the registration form. Falls back to the local backend in
+ * development so the form works out of the box with `npm run dev`.
+ */
+const REGISTRATION_BASE =
+  BASE ?? (process.env.NODE_ENV === "production" ? undefined : "http://localhost:4000");
 
 /**
  * POST /api/v1/courses/registrations — public, no auth. Runs in the browser, so
@@ -336,11 +340,13 @@ export const registrationEnabled = Boolean(BASE);
 export async function registerForCourse(
   input: CourseRegistrationInput,
 ): Promise<CourseRegistrationResult> {
-  if (!BASE) throw new RegistrationError("Online registration is not available right now.", "NO_BACKEND");
+  if (!REGISTRATION_BASE) {
+    throw new RegistrationError("Registration is not available right now. Please try again later.", "NO_BACKEND");
+  }
 
   let res: Response;
   try {
-    res = await fetch(`${BASE}/api/v1/courses/registrations`, {
+    res = await fetch(`${REGISTRATION_BASE}/api/v1/courses/registrations`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(input),
