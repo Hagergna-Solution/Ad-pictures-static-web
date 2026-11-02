@@ -263,3 +263,102 @@ export const TESTIMONIALS: Testimonial[] = [
     avatar: "Y",
   },
 ];
+
+/* ============================================================
+   AD Pictures Academy — masterclasses
+   `code` is the backend course code (POST /api/v1/courses/registrations);
+   keep it in sync with the backend's src/config/courses.js.
+   ============================================================ */
+
+export interface Course {
+  code: string;
+  name: string;
+  /** Short label for the poster-style index ("Shoot", "Edit"). */
+  track: "Shoot" | "Edit";
+  summary: string;
+  /** What the student walks away with. */
+  outcomes: string[];
+}
+
+export const COURSE_WEEKS = 2;
+export const COURSE_LEVEL = "Basic course";
+
+export const COURSES: Course[] = [
+  {
+    code: "wedding_photography",
+    name: "Wedding Photography",
+    track: "Shoot",
+    summary:
+      "Light, posing and storytelling across the whole wedding day, from getting ready to the last dance.",
+    outcomes: ["Manual exposure & natural light", "Directing couples & families", "Covering a full wedding day"],
+  },
+  {
+    code: "wedding_videography",
+    name: "Wedding Videography",
+    track: "Shoot",
+    summary:
+      "Cinematic coverage of the day: camera settings, movement, audio and shooting with the edit in mind.",
+    outcomes: ["Frame rates, shutter & ND", "Gimbal & handheld movement", "Clean audio for vows & speeches"],
+  },
+  {
+    code: "wedding_photo_editing",
+    name: "Wedding Photography Editing",
+    track: "Edit",
+    summary:
+      "Culling, colour grading and retouching a full wedding gallery with a consistent signature look.",
+    outcomes: ["Fast culling workflow", "Colour grading & presets", "Skin retouching & export"],
+  },
+  {
+    code: "wedding_video_editing",
+    name: "Wedding Videography Editing",
+    track: "Edit",
+    summary:
+      "Cutting highlight films and reels: story structure, music, pacing, colour and delivery.",
+    outcomes: ["Story structure & pacing", "Music, sound & colour", "Highlight films & 9:16 reels"],
+  },
+];
+
+export const EXPERIENCE_OPTIONS = [
+  { value: "none", label: "Complete beginner" },
+  { value: "hobbyist", label: "I shoot as a hobby" },
+  { value: "working", label: "I already work in photo / video" },
+] as const;
+
+export const SCHEDULE_OPTIONS = [
+  { value: "weekday_morning", label: "Weekday mornings" },
+  { value: "weekday_afternoon", label: "Weekday afternoons" },
+  { value: "weekend", label: "Weekends" },
+] as const;
+
+export const EQUIPMENT_OPTIONS = [
+  { value: "camera", label: "I have a camera" },
+  { value: "laptop", label: "I have a laptop" },
+] as const;
+
+export const HEARD_FROM_OPTIONS = [
+  { value: "instagram", label: "Instagram" },
+  { value: "tiktok", label: "TikTok" },
+  { value: "facebook", label: "Facebook" },
+  { value: "telegram", label: "Telegram" },
+  { value: "friend", label: "A friend" },
+  { value: "other", label: "Somewhere else" },
+] as const;
+
+export const COURSE_FAQS: Faq[] = [
+  {
+    q: "How long is each masterclass?",
+    a: "Every masterclass runs for two weeks. It is a basic course, so you do not need any previous experience to join.",
+  },
+  {
+    q: "What happens after I register?",
+    a: "Our front desk calls you, usually within one working day, to confirm the start date, class times and fee. Your seat is reserved once you confirm.",
+  },
+  {
+    q: "Do I need my own camera or laptop?",
+    a: "It helps but it is not required to start. Tell us what you have in the form and we will advise you when we call. For the editing courses a laptop is strongly recommended.",
+  },
+  {
+    q: "Can I take more than one masterclass?",
+    a: "Yes. Tick every course you want in the form and send it once. Many students take a shooting course together with the matching editing course.",
+  },
+];

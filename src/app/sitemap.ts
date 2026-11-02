@@ -21,6 +21,15 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: 0.8,
   }));
 
+  const academy: MetadataRoute.Sitemap = [
+    {
+      url: `${SITE_URL}/courses`,
+      lastModified: now,
+      changeFrequency: "monthly",
+      priority: 0.8,
+    },
+  ];
+
   const legal: MetadataRoute.Sitemap = [
     {
       url: `${SITE_URL}/privacy`,
@@ -30,5 +39,5 @@ export default function sitemap(): MetadataRoute.Sitemap {
     },
   ];
 
-  return [...home, ...services, ...legal];
+  return [...home, ...services, ...academy, ...legal];
 }

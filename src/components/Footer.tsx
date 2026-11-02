@@ -39,6 +39,11 @@ export function Footer() {
                   Book on WhatsApp
                 </a>
               </li>
+              <li>
+                <Link className="fl" href="/courses">
+                  Masterclasses
+                </Link>
+              </li>
               <li>@adpictures_ethio</li>
             </ul>
           </div>

@@ -284,3 +284,84 @@ function placeholderMedia(category: string): MediaItem[] {
     })),
   );
 }
+
+/* ---------- masterclass registration (AD Pictures Academy) ---------- */
+
+export interface CourseRegistrationInput {
+  /** One or more course codes; each becomes its own registration. */
+  courses: string[];
+  fullName: string;
+  phone: string;
+  email?: string;
+  experience?: string;
+  equipment?: string[];
+  preferredSchedule?: string;
+  heardFrom?: string;
+  message?: string;
+}
+
+export interface CourseRegistration {
+  reference: string;
+  course: string;
+  courseName: string;
+  status: string;
+}
+
+export interface CourseRegistrationResult {
+  /** One per newly registered course. */
+  registrations: CourseRegistration[];
+  /** Requested courses this phone was already registered for (skipped). */
+  alreadyRegistered: { course: string; courseName: string; reference: string }[];
+}
+
+/** Failure from the registration endpoint, with per-field messages on a 422. */
+export class RegistrationError extends Error {
+  constructor(
+    message: string,
+    readonly code: string,
+    readonly fields: Record<string, string> = {},
+  ) {
+    super(message);
+    this.name = "RegistrationError";
+  }
+}
+
+/** True when a backend is configured; without one the page falls back to WhatsApp. */
+export const registrationEnabled = Boolean(BASE);
+
+/**
+ * POST /api/v1/courses/registrations — public, no auth. Runs in the browser, so
+ * the backend's CORS_ORIGINS must include this site's origin.
+ */
+export async function registerForCourse(
+  input: CourseRegistrationInput,
+): Promise<CourseRegistrationResult> {
+  if (!BASE) throw new RegistrationError("Online registration is not available right now.", "NO_BACKEND");
+
+  let res: Response;
+  try {
+    res = await fetch(`${BASE}/api/v1/courses/registrations`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(input),
+    });
+  } catch {
+    throw new RegistrationError("We couldn't reach our server. Check your connection and try again.", "NETWORK");
+  }
+
+  const body = (await res.json().catch(() => null)) as
+    | { success: true; data: CourseRegistrationResult }
+    | { success: false; error?: { code?: string; message?: string; details?: Record<string, string> } }
+    | null;
+
+  if (res.ok && body && body.success) {
+    return { registrations: body.data.registrations ?? [], alreadyRegistered: body.data.alreadyRegistered ?? [] };
+  }
+
+  const err = body && !body.success ? body.error : undefined;
+  throw new RegistrationError(
+    err?.message || `Registration failed (${res.status}).`,
+    err?.code || "UNKNOWN",
+    res.status === 422 ? (err?.details ?? {}) : {},
+  );
+}

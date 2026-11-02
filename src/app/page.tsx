@@ -10,6 +10,7 @@ import { VideoCard } from "@/components/VideoCard";
 import { PortfolioCard } from "@/components/PortfolioCard";
 import { Studio } from "@/components/Studio";
 import { Services } from "@/components/Services";
+import { AcademyTeaser } from "@/components/AcademyTeaser";
 import { Testimonials } from "@/components/Testimonials";
 import { Faq } from "@/components/Faq";
 import { BookingCTA } from "@/components/BookingCTA";
@@ -72,6 +73,7 @@ export default async function Home() {
       )}
 
       <Services />
+      <AcademyTeaser />
       <Testimonials />
       <Faq />
       <BookingCTA />

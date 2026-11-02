@@ -1,5 +1,5 @@
 import { site, absoluteUrl } from "./site";
-import type { Service } from "./content";
+import type { Course, Service } from "./content";
 
 type Json = Record<string, unknown>;
 
@@ -112,6 +112,36 @@ export function faqSchema(faqs: { q: string; a: string }[]): Json {
       "@type": "Question",
       name: f.q,
       acceptedAnswer: { "@type": "Answer", text: f.a },
+    })),
+  };
+}
+
+/** The masterclasses as an ItemList of schema.org Course nodes (rich results). */
+export function courseListSchema(courses: Course[], weeks: number): Json {
+  return {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    itemListElement: courses.map((c, i) => ({
+      "@type": "ListItem",
+      position: i + 1,
+      item: {
+        "@type": "Course",
+        name: `${c.name} Masterclass`,
+        description: c.summary,
+        url: absoluteUrl(`/courses?course=${c.code}#register`),
+        provider: { "@id": ORG_ID },
+        educationalLevel: "Beginner",
+        timeRequired: `P${weeks}W`,
+        hasCourseInstance: {
+          "@type": "CourseInstance",
+          courseMode: "onsite",
+          location: {
+            "@type": "Place",
+            name: site.name,
+            address: `${site.address.street}, ${site.address.locality}, Ethiopia`,
+          },
+        },
+      },
     })),
   };
 }

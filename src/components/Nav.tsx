@@ -11,6 +11,7 @@ const LINKS = [
   { href: "/#work", label: "Stills" },
   { href: "/#studio", label: "Studio" },
   { href: "/#services", label: "Services" },
+  { href: "/courses", label: "Academy" },
 ];
 
 export function Nav() {
