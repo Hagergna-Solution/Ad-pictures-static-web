@@ -84,9 +84,32 @@ function Lightbox({
   );
 }
 
+/** Tile shape in the grid: the first photo is a 2×2 feature, landscapes span 2 columns. */
+function shape(p: PortfolioItem, i: number): "feature" | "wide" | "tall" {
+  const landscape = Boolean(p.width && p.height && p.width > p.height);
+  if (i === 0 && !landscape) return "feature";
+  return landscape ? "wide" : "tall";
+}
+
+const CELLS = { feature: 4, wide: 2, tall: 1 } as const;
+
 /**
- * Masonry gallery: photos keep their own shape (portrait stays portrait),
- * optional category filters, "show more", and a full-screen viewer on click.
+ * How many photos to show so the grid ends on complete rows (4 columns on
+ * desktop, 2 on phones): at least `min` photos, then up to the next multiple of 4 cells.
+ */
+function fullRows(items: PortfolioItem[], min: number): number {
+  let cells = 0;
+  for (let i = 0; i < items.length; i += 1) {
+    cells += CELLS[shape(items[i], i)];
+    if (i + 1 >= min && cells % 4 === 0) return i + 1;
+  }
+  return items.length;
+}
+
+/**
+ * Editorial grid: even row heights, a large feature tile, landscapes across
+ * two columns; optional category filters, "show more", and a full-screen
+ * viewer on click.
  */
 export function StillsGallery({
   items,
@@ -110,7 +133,7 @@ export function StillsGallery({
   const close = useCallback(() => setOpen(null), []);
 
   const shown = cat === "all" ? photos : photos.filter((p) => p.category?.toLowerCase() === cat);
-  const visible = shown.slice(0, limit);
+  const visible = shown.slice(0, fullRows(shown, limit));
 
   return (
     <div className="sg">
@@ -143,7 +166,7 @@ export function StillsGallery({
           <button
             key={`${p.url}-${i}`}
             type="button"
-            className="sg-item"
+            className={`sg-item ${shape(p, i)}`}
             onClick={() => setOpen(i)}
             aria-label={`Open ${p.title}`}
             style={{ animationDelay: `${Math.min(i, 11) * 40}ms` }}
@@ -152,11 +175,9 @@ export function StillsGallery({
             <img
               src={p.url}
               alt={p.title}
-              loading={i < 4 ? "eager" : "lazy"}
+              loading={i < 5 ? "eager" : "lazy"}
               decoding="async"
-              width={p.width}
-              height={p.height}
-              style={p.width && p.height ? { aspectRatio: `${p.width} / ${p.height}` } : undefined}
+              style={p.focus ? { objectPosition: p.focus } : undefined}
             />
             <span className="sg-ov">
               <span className="sg-t">{p.title}</span>
@@ -168,7 +189,7 @@ export function StillsGallery({
 
       {shown.length > visible.length && (
         <div className="sg-more">
-          <button type="button" className="btn-ghost" onClick={() => setLimit((l) => l + 12)}>
+          <button type="button" className="btn-ghost" onClick={() => setLimit(visible.length + 8)}>
             Show more photos <span>({shown.length - visible.length})</span>
           </button>
         </div>
