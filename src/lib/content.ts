@@ -202,6 +202,8 @@ export interface PortfolioItem {
  * width/height are the intrinsic sizes so the grid can reserve space.
  */
 export const CURATED_STILLS: PortfolioItem[] = [
+  { title: "First Light", category: "wedding", tags: ["wedding", "portrait"], url: `${R2_BASE}/posters/img_1747-poster.jpg`, width: 720, height: 1280 },
+  { title: "Gold & White", category: "wedding", tags: ["wedding", "detail"], url: `${R2_BASE}/posters/img_0493-poster.jpg`, width: 720, height: 1280 },
   { title: "Garden Walk", category: "wedding", tags: ["wedding", "portrait"], url: `${R2_BASE}/images/img_0236.webp`, width: 1280, height: 1600 },
   { title: "Golden Hour", category: "wedding", tags: ["wedding", "portrait"], url: `${R2_BASE}/posters/img_1998-poster.jpg`, width: 1280, height: 720 },
   { title: "Red & Gold", category: "portrait", tags: ["habesha", "bride"], url: `${R2_BASE}/posters/img_0267-poster.jpg`, width: 720, height: 1280 },
@@ -219,7 +221,21 @@ export const CURATED_STILLS: PortfolioItem[] = [
   { title: "Habesha", category: "event", tags: ["event", "portrait"], url: `${R2_BASE}/posters/img_3147-poster.jpg`, width: 720, height: 1280 },
   { title: "The Detail", category: "wedding", tags: ["wedding", "detail"], url: `${R2_BASE}/posters/img_1612-poster.jpg`, width: 1280, height: 720 },
   { title: "The Send-Off", category: "wedding", tags: ["wedding", "portrait"], url: `${R2_BASE}/posters/img_1603-poster.jpg`, width: 720, height: 1280 },
+  { title: "The Veil", category: "wedding", tags: ["bride", "portrait"], url: `${R2_BASE}/posters/img_1558-poster.jpg`, width: 720, height: 1280 },
+  { title: "The Bouquet", category: "wedding", tags: ["wedding", "detail"], url: `${R2_BASE}/posters/img_0091-poster.jpg`, width: 720, height: 1280 },
+  { title: "Night Drive", category: "event", tags: ["event", "night"], url: `${R2_BASE}/posters/img_1748-poster.jpg`, width: 720, height: 1280 },
 ];
+
+/**
+ * The gallery's photos: the static stills above (all on the asset domain),
+ * optionally narrowed to a service category. The gallery does not read the
+ * backend portfolio, whose image links were not resolving on the live site.
+ */
+export function stillsFor(category?: string): PortfolioItem[] {
+  if (!category) return CURATED_STILLS;
+  const c = category.toLowerCase();
+  return CURATED_STILLS.filter((s) => (s.category ?? "").toLowerCase() === c);
+}
 
 export interface Faq {
   q: string;
