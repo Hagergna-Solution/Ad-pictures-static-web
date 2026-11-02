@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { FILMS } from "@/lib/content";
+import { STUDIO_FILM } from "@/lib/content";
 import { StudioVideo } from "./StudioVideo";
 
 export function Studio() {
@@ -42,12 +42,12 @@ export function Studio() {
             </div>
             <Image
               className="poster"
-              src={FILMS[3].poster!}
+              src={STUDIO_FILM.poster!}
               alt="A wedding portrait by AD Pictures"
               fill
               sizes="(max-width:860px) 100vw, 50vw"
             />
-            <StudioVideo src={FILMS[3].src} />
+            <StudioVideo src={STUDIO_FILM.src} />
             <div className="rscrim" />
           </div>
         </div>

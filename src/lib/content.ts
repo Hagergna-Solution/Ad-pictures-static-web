@@ -28,9 +28,8 @@ export interface Film {
 /** Tone cycle used to give dynamic reels a cinematic resting gradient. */
 export const REEL_TONES: Tone[] = ["warm", "red", "low", "cool", "high"];
 
-/** Public R2 bucket serving all static media (videos, posters, images). */
-export const R2_BASE =
-  "https://pub-c0978e7f876342f9af3932f1f3952107.r2.dev/assets/v1";
+/** Static media (videos, posters, images): the R2 bucket on the studio's own asset domain. */
+export const R2_BASE = "https://asset.adpicturesethio.com/assets/v1";
 
 /**
  * Featured reels — the 9:16 cards under "Recent reels".
@@ -42,11 +41,16 @@ export const R2_BASE =
  * lands on.
  */
 export const FILMS: Film[] = [
+  { src: `${R2_BASE}/videos/img_0267-720.mp4`, title: "Red & Gold", category: "Wedding Film", tone: "red", exif: "4K · 24FPS · T2.0", poster: `${R2_BASE}/posters/img_0267-poster.jpg` },
+  { src: `${R2_BASE}/videos/img_0565-720.mp4`, title: "The Groomsmen", category: "Event Film", tone: "cool", exif: "4K · 24FPS · T2.8", poster: `${R2_BASE}/posters/img_0565-poster.jpg` },
   { src: `${R2_BASE}/videos/img_1561-720.mp4`, title: "The Bride", category: "Wedding Film", tone: "warm", exif: "4K · 24FPS · T2.1", poster: `${R2_BASE}/posters/img_1561-poster.jpg` },
+  { src: `${R2_BASE}/videos/img_8209-720.mp4`, title: "Front Row", category: "Wedding Film", tone: "low", exif: "4K · 24FPS · T1.8", poster: `${R2_BASE}/posters/img_8209-poster.jpg` },
+  { src: `${R2_BASE}/videos/img_0091-720.mp4`, title: "The Bouquet", category: "Wedding Film", tone: "high", exif: "4K · 24FPS · T2.0", poster: `${R2_BASE}/posters/img_0091-poster.jpg` },
   { src: `${R2_BASE}/videos/img_1745-720.mp4`, title: "Grand Entrance", category: "Event Film", tone: "red", exif: "4K · 24FPS · T2.8", poster: `${R2_BASE}/posters/img_1745-poster.jpg` },
-  { src: `${R2_BASE}/videos/img_0493-720.mp4`, title: "Gold & White", category: "Wedding Film", tone: "low", exif: "4K · 24FPS · T2.1", poster: `${R2_BASE}/posters/img_0493-poster.jpg` },
-  { src: `${R2_BASE}/videos/img_1747-720.mp4`, title: "First Light", category: "Wedding Film", tone: "cool", exif: "4K · 24FPS · T2.4", poster: `${R2_BASE}/posters/img_1747-poster.jpg` },
 ];
+
+/** The reel behind the Studio section portrait (kept fixed so reordering the rails never changes it). */
+export const STUDIO_FILM: Film = { src: `${R2_BASE}/videos/img_1747-720.mp4`, title: "First Light", category: "Wedding Film", tone: "cool", exif: "4K · 24FPS · T2.4", poster: `${R2_BASE}/posters/img_1747-poster.jpg` };
 
 /**
  * Hero rotation — its own cut, drawn from the landscape 16:9 masters rather
@@ -79,9 +83,13 @@ export const HERO_FILMS: Film[] = [
  * different footage rather than the featured four relabelled.
  */
 export const RECENT_FILMS: Film[] = [
+  { src: `${R2_BASE}/videos/img_8290-720.mp4`, title: "From Above", category: "Event Film", tone: "cool", exif: "4K · 24FPS · DRONE", poster: `${R2_BASE}/posters/img_8290-poster.jpg` },
+  { src: `${R2_BASE}/videos/img_0493-720.mp4`, title: "Gold & White", category: "Wedding Film", tone: "low", exif: "4K · 24FPS · T2.1", poster: `${R2_BASE}/posters/img_0493-poster.jpg` },
   { src: `${R2_BASE}/videos/img_1558-720.mp4`, title: "The Veil", category: "Wedding Film", tone: "high", exif: "4K · 24FPS · T2.0", poster: `${R2_BASE}/posters/img_1558-poster.jpg` },
   { src: `${R2_BASE}/videos/img_3147-720.mp4`, title: "Habesha", category: "Event Film", tone: "cool", exif: "4K · 24FPS · T2.2", poster: `${R2_BASE}/posters/img_3147-poster.jpg` },
+  { src: `${R2_BASE}/videos/img_0095-720.mp4`, title: "The Reception", category: "Event Film", tone: "warm", exif: "4K · 24FPS · T1.8", poster: `${R2_BASE}/posters/img_0095-poster.jpg` },
   { src: `${R2_BASE}/videos/img_1603-720.mp4`, title: "The Send-Off", category: "Wedding Film", tone: "warm", exif: "4K · 24FPS · T2.8", poster: `${R2_BASE}/posters/img_1603-poster.jpg` },
+  { src: `${R2_BASE}/videos/img_1747-720.mp4`, title: "First Light", category: "Wedding Film", tone: "cool", exif: "4K · 24FPS · T2.4", poster: `${R2_BASE}/posters/img_1747-poster.jpg` },
   { src: `${R2_BASE}/videos/img_1748-720.mp4`, title: "Night Drive", category: "Event Film", tone: "low", exif: "4K · 24FPS · T1.8", poster: `${R2_BASE}/posters/img_1748-poster.jpg` },
 ];
 
@@ -182,26 +190,35 @@ export interface PortfolioItem {
    * matter say where to hold. Omitted for landscape stills, which need no help.
    */
   focus?: string;
+  /** Intrinsic size, when known — lets the gallery reserve space before the image loads. */
+  width?: number;
+  height?: number;
 }
 
 /**
- * The contact sheet — hand-picked frames at their full 1280×720 / 720×1280
- * masters.
- *
- * Deliberately not the `images/*.webp` set: those top out between 360px and
- * 960px and most carry an @adpictures_ethio watermark burned into the corner,
- * which is fine for a feed and visibly rough in a card. These frames are clean
- * and roughly twice the resolution.
+ * The contact sheet — hand-picked frames, shown as a masonry gallery with a
+ * full-screen viewer. Mixes the 1280×1600 portrait stills (images/*.webp,
+ * the newer clean set) with 1280×720 / 720×1280 frames from the films.
+ * width/height are the intrinsic sizes so the grid can reserve space.
  */
 export const CURATED_STILLS: PortfolioItem[] = [
-  { title: "Golden Hour", category: "wedding", tags: ["wedding", "portrait"], url: `${R2_BASE}/posters/img_1998-poster.jpg` },
-  { title: "The Bride", category: "wedding", tags: ["wedding", "portrait"], url: `${R2_BASE}/posters/img_1561-poster.jpg`, focus: "50% 32%" },
-  { title: "The Vow", category: "wedding", tags: ["wedding", "film"], url: `${R2_BASE}/posters/img_2003-poster.jpg` },
-  { title: "Grand Entrance", category: "event", tags: ["event", "portrait"], url: `${R2_BASE}/posters/img_1745-poster.jpg`, focus: "50% 28%" },
-  { title: "The Blessing", category: "wedding", tags: ["wedding", "ceremony"], url: `${R2_BASE}/posters/img_1581-poster.jpg` },
-  { title: "Habesha", category: "event", tags: ["event", "portrait"], url: `${R2_BASE}/posters/img_3147-poster.jpg`, focus: "50% 34%" },
-  { title: "The Detail", category: "wedding", tags: ["wedding", "detail"], url: `${R2_BASE}/posters/img_1612-poster.jpg` },
-  { title: "The Send-Off", category: "wedding", tags: ["wedding", "portrait"], url: `${R2_BASE}/posters/img_1603-poster.jpg`, focus: "50% 40%" },
+  { title: "Garden Walk", category: "wedding", tags: ["wedding", "portrait"], url: `${R2_BASE}/images/img_0236.webp`, width: 1280, height: 1600 },
+  { title: "Golden Hour", category: "wedding", tags: ["wedding", "portrait"], url: `${R2_BASE}/posters/img_1998-poster.jpg`, width: 1280, height: 720 },
+  { title: "Red & Gold", category: "portrait", tags: ["habesha", "bride"], url: `${R2_BASE}/posters/img_0267-poster.jpg`, width: 720, height: 1280 },
+  { title: "The Entrance", category: "wedding", tags: ["wedding", "celebration"], url: `${R2_BASE}/images/img_9954.webp`, width: 943, height: 1600 },
+  { title: "The Vow", category: "wedding", tags: ["wedding", "film"], url: `${R2_BASE}/posters/img_2003-poster.jpg`, width: 1280, height: 720 },
+  { title: "Lilies", category: "wedding", tags: ["wedding", "detail"], url: `${R2_BASE}/images/img_9938.webp`, width: 1067, height: 1600 },
+  { title: "The Groomsmen", category: "event", tags: ["event", "crew"], url: `${R2_BASE}/posters/img_0565-poster.jpg`, width: 720, height: 1280 },
+  { title: "The Cake", category: "event", tags: ["reception", "detail"], url: `${R2_BASE}/images/img_9956.webp`, width: 1067, height: 1600 },
+  { title: "The Bride", category: "wedding", tags: ["wedding", "portrait"], url: `${R2_BASE}/posters/img_1561-poster.jpg`, width: 720, height: 1280 },
+  { title: "The Blessing", category: "wedding", tags: ["wedding", "ceremony"], url: `${R2_BASE}/posters/img_1581-poster.jpg`, width: 1280, height: 720 },
+  { title: "The Corridor", category: "portrait", tags: ["bride", "portrait"], url: `${R2_BASE}/images/img_9966.webp`, width: 1067, height: 1600 },
+  { title: "Front Row", category: "portrait", tags: ["couple", "portrait"], url: `${R2_BASE}/posters/img_8209-poster.jpg`, width: 720, height: 1280 },
+  { title: "Grand Entrance", category: "event", tags: ["event", "portrait"], url: `${R2_BASE}/posters/img_1745-poster.jpg`, width: 720, height: 1280 },
+  { title: "From Above", category: "event", tags: ["event", "drone"], url: `${R2_BASE}/posters/img_8290-poster.jpg`, width: 720, height: 1280 },
+  { title: "Habesha", category: "event", tags: ["event", "portrait"], url: `${R2_BASE}/posters/img_3147-poster.jpg`, width: 720, height: 1280 },
+  { title: "The Detail", category: "wedding", tags: ["wedding", "detail"], url: `${R2_BASE}/posters/img_1612-poster.jpg`, width: 1280, height: 720 },
+  { title: "The Send-Off", category: "wedding", tags: ["wedding", "portrait"], url: `${R2_BASE}/posters/img_1603-poster.jpg`, width: 720, height: 1280 },
 ];
 
 export interface Faq {

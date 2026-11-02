@@ -5,7 +5,7 @@ import Image from "next/image";
 import type { Film } from "@/lib/content";
 import { PlayIcon } from "./icons";
 
-export function VideoCard({ film, index }: { film: Film; index: number }) {
+export function VideoCard({ film, index, onOpen }: { film: Film; index: number; onOpen?: () => void }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const loadedRef = useRef(false);
   const [playing, setPlaying] = useState(false);
@@ -29,9 +29,23 @@ export function VideoCard({ film, index }: { film: Film; index: number }) {
   return (
     <article
       className={`vcard${playing ? " playing" : ""}`}
+      // Hover previews the reel silently; a click (or tap) opens it full screen.
       onMouseEnter={start}
       onMouseLeave={stop}
-      onClick={() => (playing ? stop() : start())}
+      onClick={() => {
+        stop();
+        if (onOpen) onOpen();
+        else start();
+      }}
+      role={onOpen ? "button" : undefined}
+      tabIndex={onOpen ? 0 : undefined}
+      aria-label={onOpen ? `Play ${film.title} full screen` : undefined}
+      onKeyDown={(e) => {
+        if (onOpen && (e.key === "Enter" || e.key === " ")) {
+          e.preventDefault();
+          onOpen();
+        }
+      }}
     >
       <div className={`tone tone-${film.tone}`}>
         <div className="gr" />

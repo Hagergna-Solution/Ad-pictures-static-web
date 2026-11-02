@@ -83,3 +83,37 @@ export function MoonIcon(props: SVGProps<SVGSVGElement>) {
     </svg>
   );
 }
+
+export function CloseIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" aria-hidden="true" {...props}>
+      <path d="M6 6l12 12M18 6L6 18" />
+    </svg>
+  );
+}
+
+export function SoundOnIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" {...props}>
+      <path d="M11 5 6 9H3v6h3l5 4V5z" />
+      <path d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13" />
+    </svg>
+  );
+}
+
+export function SoundOffIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" {...props}>
+      <path d="M11 5 6 9H3v6h3l5 4V5z" />
+      <path d="m16 9 6 6M22 9l-6 6" />
+    </svg>
+  );
+}
+
+export function PauseIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" {...props}>
+      <path d="M7 5h3.5v14H7zM13.5 5H17v14h-3.5z" />
+    </svg>
+  );
+}
