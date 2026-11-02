@@ -9,7 +9,7 @@ import { waLink } from "@/lib/whatsapp";
 import { JsonLd } from "@/components/JsonLd";
 import { Grain } from "@/components/Grain";
 import { Nav } from "@/components/Nav";
-import { PortfolioCard } from "@/components/PortfolioCard";
+import { StillsGallery } from "@/components/StillsGallery";
 import { BookingCTA } from "@/components/BookingCTA";
 import { Footer } from "@/components/Footer";
 import { FloatingWhatsApp } from "@/components/FloatingWhatsApp";
@@ -91,11 +91,7 @@ export default async function ServiceDetailPage({
               </a>
             </div>
           ) : (
-            <div className="media-grid">
-              {photos.map((item, i) => (
-                <PortfolioCard key={`${item.title}-${i}`} item={item} index={i} />
-              ))}
-            </div>
+            <StillsGallery items={photos} filters={false} initial={24} />
           )}
         </section>
       </main>
