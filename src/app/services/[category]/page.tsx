@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { SERVICES, getServiceBySlug } from "@/lib/content";
-import { getPortfolio } from "@/lib/api";
+import { SERVICES, getServiceBySlug, stillsFor } from "@/lib/content";
 import { absoluteUrl } from "@/lib/site";
 import { serviceSchema, breadcrumbSchema } from "@/lib/schema";
 import { waLink } from "@/lib/whatsapp";
@@ -52,8 +51,8 @@ export default async function ServiceDetailPage({
   const service = getServiceBySlug(category);
   if (!service) notFound();
 
-  // Pull the public portfolio gallery, filtered to this service's category.
-  const photos = await getPortfolio(category);
+  // Static stills for this service's category.
+  const photos = stillsFor(category);
 
   return (
     <>

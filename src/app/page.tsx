@@ -1,5 +1,4 @@
-import { getPortfolio } from "@/lib/api";
-import { FILMS, HERO_FILMS, RECENT_FILMS } from "@/lib/content";
+import { FILMS, HERO_FILMS, RECENT_FILMS, stillsFor } from "@/lib/content";
 import { Grain } from "@/components/Grain";
 import { Loader } from "@/components/Loader";
 import { Nav } from "@/components/Nav";
@@ -16,10 +15,10 @@ import { BookingCTA } from "@/components/BookingCTA";
 import { Footer } from "@/components/Footer";
 import { FloatingWhatsApp } from "@/components/FloatingWhatsApp";
 
-export default async function Home() {
-  // The gallery (Stills) is the only backend-driven section; every video and
-  // reel on the landing page comes from the static R2 assets.
-  const portfolio = await getPortfolio();
+export default function Home() {
+  // Every photo, video and reel on the landing page comes from the static
+  // asset domain (see R2_BASE in lib/content.ts).
+  const portfolio = stillsFor();
 
   const featured = FILMS;
   const recent = RECENT_FILMS;
